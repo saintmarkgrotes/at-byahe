@@ -41,3 +41,23 @@ export const getWeekDays = (date) => {
     return day;
   });
 };
+
+const NUMBER_WORDS = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
+
+/** ('2026-09-19', '2026-09-23') -> 'Sep 19 – Sep 23, 2026' */
+export const formatLongRange = (startIso, endIso) => {
+  const end = parseDate(endIso);
+  return `${formatShortDate(parseDate(startIso))} – ${formatShortDate(end)}, ${end.getFullYear()}`;
+};
+
+/** '2026-09-19' -> 'Sep 19, 2026 (Sat)' */
+export const formatFullDate = (iso) => {
+  const date = parseDate(iso);
+  return `${formatShortDate(date)}, ${date.getFullYear()} (${WEEKDAYS[date.getDay()]})`;
+};
+
+/** ('2026-09-19', '2026-09-19') -> 'Day One' */
+export const getDayLabel = (tripStartIso, dateIso) => {
+  const number = Math.round((parseDate(dateIso) - parseDate(tripStartIso)) / DAY_MS) + 1;
+  return `Day ${NUMBER_WORDS[number - 1] ?? number}`;
+};

@@ -37,7 +37,7 @@ export default function HomeScreen() {
           name={user.firstName}
           greeting={greeting}
           dateLabel={formatHeaderDate(today)}
-          onNewTripPress={() => {}}
+          onNewTripPress={() => navigation.navigate('Itinerary')}
         />
 
         {/* Upcoming trips */}

@@ -1,5 +1,8 @@
 export { default as CalendarCard } from './CalendarCard';
+export { default as ChipInput } from './ChipInput';
+export { default as FormField } from './FormField';
 export { default as GreetingHeader } from './GreetingHeader';
+export { default as NewTripModal } from './NewTripModal';
 export { default as PackingListCard } from './PackingListCard';
 export { default as TripCard } from './TripCard';
 export { default as TripCarousel } from './TripCarousel';

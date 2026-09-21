@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,12 +7,14 @@ import { SectionHeader } from '../components/common';
 import {
   CalendarCard,
   GreetingHeader,
+  NewTripModal,
   PackingListCard,
   TripCarousel,
   WeatherCard,
 } from '../components/home';
 import { SCREEN_PADDING, TAB_BAR_HEIGHT } from '../constants/layout';
-import { packingLists, trips, user, weather } from '../data/mockData';
+import { useTrips } from '../context/TripsContext';
+import { user, weather } from '../data/mockData';
 import useGreeting from '../hooks/useGreeting';
 import { formatHeaderDate, parseDate } from '../utils/date';
 
@@ -20,12 +22,25 @@ export default function HomeScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const greeting = useGreeting();
+  const { trips, packingLists, addTrip, selectTrip } = useTrips();
+  const [newTripOpen, setNewTripOpen] = useState(false);
 
   const today = useMemo(() => new Date(), []);
   const nextTrip = trips[0];
   const tripRange = nextTrip
     ? { start: parseDate(nextTrip.startDate), end: parseDate(nextTrip.endDate) }
     : null;
+
+  const handleCreateTrip = (form) => {
+    addTrip(form); // saves the trip and selects it
+    setNewTripOpen(false);
+    navigation.navigate('Itinerary'); // remove this line to stay on Home after saving
+  };
+
+  const handleTripPress = (trip) => {
+    selectTrip(trip.id);
+    navigation.navigate('Itinerary');
+  };
 
   return (
     <View className="flex-1 bg-white">
@@ -37,7 +52,7 @@ export default function HomeScreen() {
           name={user.firstName}
           greeting={greeting}
           dateLabel={formatHeaderDate(today)}
-          onNewTripPress={() => navigation.navigate('Itinerary')}
+          onNewTripPress={() => setNewTripOpen(true)}
         />
 
         {/* Upcoming trips */}
@@ -49,7 +64,7 @@ export default function HomeScreen() {
             className="px-6"
             onActionPress={() => navigation.navigate('Itinerary')}
           />
-          <TripCarousel trips={trips} onTripPress={() => navigation.navigate('Itinerary')} />
+          <TripCarousel trips={trips} onTripPress={handleTripPress} />
         </View>
 
         {/* Calendar + weather */}
@@ -80,6 +95,12 @@ export default function HomeScreen() {
           ))}
         </View>
       </ScrollView>
+
+      <NewTripModal
+        visible={newTripOpen}
+        onClose={() => setNewTripOpen(false)}
+        onSubmit={handleCreateTrip}
+      />
     </View>
   );
 }

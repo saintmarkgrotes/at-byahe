@@ -6,6 +6,7 @@
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
     "@react-navigation/bottom-tabs": "^7.19.2",
     "@react-navigation/native": "^7.4.1",
+    "babel-preset-expo": "~57.0.0",
     "expo": "~57.0.24",
     "expo-font": "~57.0.4",
     "expo-linear-gradient": "~57.0.2",

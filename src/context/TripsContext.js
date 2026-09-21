@@ -9,6 +9,9 @@ import {
 // so a screen can add a trip and every other screen sees it.
 const TripsContext = createContext(null);
 
+// Packing items without a category go under this heading
+export const DEFAULT_CATEGORY = 'Essentials';
+
 const slugify = (text) =>
   text
     .toLowerCase()
@@ -18,12 +21,27 @@ const slugify = (text) =>
 
 export function TripsProvider({ children }) {
   const [trips, setTrips] = useState(initialTrips);
-  const [packingLists, setPackingLists] = useState(initialPackingLists);
+  const [rawPackingLists, setPackingLists] = useState(initialPackingLists);
   const [itinerary, setItinerary] = useState(initialItinerary);
   const [doneDatesByTrip, setDoneDatesByTrip] = useState({}); // { tripId: ['2026-09-19', ...] }
   const [selectedTripId, setSelectedTripId] = useState(initialTrips[0]?.id ?? null);
 
-  // The trip the Itinerary screen shows
+  // Packed / total are always calculated from the items, so Home and Packing never disagree
+  const packingLists = useMemo(
+    () =>
+      rawPackingLists.map((list) =>
+        list.items
+          ? {
+              ...list,
+              packed: list.items.filter((item) => item.packed).length,
+              total: list.items.length,
+            }
+          : list
+      ),
+    [rawPackingLists]
+  );
+
+  // The trip the Itinerary screen and Packing screen show
   const selectedTrip = trips.find((trip) => trip.id === selectedTripId) ?? trips[0] ?? null;
 
   const selectTrip = useCallback((tripId) => setSelectedTripId(tripId), []);
@@ -52,6 +70,7 @@ export function TripsProvider({ children }) {
         ...current,
         {
           id: `${id}-packing`,
+          tripId: id,
           title: destination,
           startDate,
           endDate,
@@ -61,6 +80,7 @@ export function TripsProvider({ children }) {
             id: `${id}-p${index + 1}`,
             title,
             packed: false,
+            category: DEFAULT_CATEGORY,
           })),
         },
       ]);
@@ -108,6 +128,67 @@ export function TripsProvider({ children }) {
     setItinerary((current) => current.filter((entry) => entry.id !== entryId));
   }, []);
 
+  const togglePacked = useCallback((listId, itemId) => {
+    setPackingLists((current) =>
+      current.map((list) =>
+        list.id !== listId
+          ? list
+          : {
+              ...list,
+              items: list.items.map((item) =>
+                item.id === itemId ? { ...item, packed: !item.packed } : item
+              ),
+            }
+      )
+    );
+  }, []);
+
+  const deletePackingItem = useCallback((listId, itemId) => {
+    setPackingLists((current) =>
+      current.map((list) =>
+        list.id !== listId
+          ? list
+          : { ...list, items: list.items.filter((item) => item.id !== itemId) }
+      )
+    );
+  }, []);
+
+  // Adds an unpacked item. If the trip has no packing list yet, one is created for it.
+  const addPackingItem = useCallback(
+    (tripId, title, category = DEFAULT_CATEGORY) => {
+      const trip = trips.find((entry) => entry.id === tripId);
+      const item = {
+        id: `${tripId}-p${Date.now()}`,
+        title,
+        packed: false,
+        category,
+      };
+
+      setPackingLists((current) => {
+        if (current.some((list) => list.tripId === tripId)) {
+          return current.map((list) =>
+            list.tripId !== tripId ? list : { ...list, items: [...(list.items ?? []), item] }
+          );
+        }
+        if (!trip) return current;
+        return [
+          ...current,
+          {
+            id: `${tripId}-packing`,
+            tripId,
+            title: trip.destination,
+            startDate: trip.startDate,
+            endDate: trip.endDate,
+            packed: 0,
+            total: 0,
+            items: [item],
+          },
+        ];
+      });
+    },
+    [trips]
+  );
+
   const toggleDayDone = useCallback((tripId, date) => {
     setDoneDatesByTrip((current) => {
       const dates = current[tripId] ?? [];
@@ -130,8 +211,25 @@ export function TripsProvider({ children }) {
       toggleActivity,
       deleteEntry,
       toggleDayDone,
+      togglePacked,
+      deletePackingItem,
+      addPackingItem,
     }),
-    [trips, packingLists, itinerary, doneDatesByTrip, selectedTrip, selectTrip, addTrip, toggleActivity, deleteEntry, toggleDayDone]
+    [
+      trips,
+      packingLists,
+      itinerary,
+      doneDatesByTrip,
+      selectedTrip,
+      selectTrip,
+      addTrip,
+      toggleActivity,
+      deleteEntry,
+      toggleDayDone,
+      togglePacked,
+      deletePackingItem,
+      addPackingItem,
+    ]
   );
 
   return <TripsContext.Provider value={value}>{children}</TripsContext.Provider>;

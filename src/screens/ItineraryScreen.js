@@ -13,7 +13,7 @@ import {
 } from '../components/itinerary';
 import colors from '../constants/colors';
 import { SCREEN_PADDING, TAB_BAR_HEIGHT } from '../constants/layout';
-import { itinerary, trips } from '../data/mockData';
+import { useTrips } from '../context/TripsContext';
 import { formatFullDate, formatLongRange, getDayLabel, getTripLength } from '../utils/date';
 import PlaceholderScreen from './PlaceholderScreen';
 
@@ -29,39 +29,23 @@ export default function ItineraryScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
-  const trip = trips[0];
+    const {
+    selectedTrip: trip,
+    itinerary,
+    doneDatesByTrip,
+    toggleActivity,
+    toggleDayDone,
+    deleteEntry,
+  } = useTrips();
   const [activeTab, setActiveTab] = useState('Itinerary');
-  const [entries, setEntries] = useState(() =>
-    itinerary.filter((entry) => entry.tripId === trip?.id)
-  );
-  const [doneDates, setDoneDates] = useState([]); // dates (e.g. '2026-09-19') marked done
 
   if (!trip) return <PlaceholderScreen title="Itinerary" />;
 
+  const entries = itinerary.filter((entry) => entry.tripId === trip.id);
+  const doneDates = doneDatesByTrip[trip.id] ?? []; // dates (e.g. '2026-09-19') marked done
+
   const totalDays = getTripLength(trip.startDate, trip.endDate);
   const progress = totalDays > 0 ? doneDates.length / totalDays : 0;
-
-  const toggleActivity = (entryId, activityId) =>
-    setEntries((current) =>
-      current.map((entry) =>
-        entry.id !== entryId
-          ? entry
-          : {
-              ...entry,
-              activities: entry.activities.map((activity) =>
-                activity.id === activityId ? { ...activity, done: !activity.done } : activity
-              ),
-            }
-      )
-    );
-
-  const toggleDayDone = (date) =>
-    setDoneDates((current) =>
-      current.includes(date) ? current.filter((d) => d !== date) : [...current, date]
-    );
-
-  const deleteEntry = (entryId) =>
-    setEntries((current) => current.filter((entry) => entry.id !== entryId));
 
   return (
     <View className="flex-1 bg-white">
@@ -127,7 +111,7 @@ export default function ItineraryScreen() {
                       dayLabel={getDayLabel(trip.startDate, entry.date)}
                       dateLabel={formatFullDate(entry.date)}
                       done={doneDates.includes(entry.date)}
-                      onToggleDone={() => toggleDayDone(entry.date)}
+                      onToggleDone={() => toggleDayDone(trip.id, entry.date)}
                     />
                     <ItineraryCard
                       entry={entry}

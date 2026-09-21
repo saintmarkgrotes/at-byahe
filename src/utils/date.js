@@ -61,3 +61,11 @@ export const getDayLabel = (tripStartIso, dateIso) => {
   const number = Math.round((parseDate(dateIso) - parseDate(tripStartIso)) / DAY_MS) + 1;
   return `Day ${NUMBER_WORDS[number - 1] ?? number}`;
 };
+
+/** True only for a real calendar date written as YYYY-MM-DD ('2026-02-31' is false) */
+export const isValidIsoDate = (iso) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false;
+  const [year, month, day] = iso.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
+};

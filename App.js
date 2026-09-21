@@ -12,6 +12,7 @@ import {
 } from '@expo-google-fonts/plus-jakarta-sans';
 
 import AppNavigator from './src/navigation/AppNavigator';
+import { TripsProvider } from './src/context/TripsContext';
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -27,7 +28,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
-      <AppNavigator />
+      <TripsProvider>
+        <AppNavigator />
+      </TripsProvider>
     </SafeAreaProvider>
   );
 }

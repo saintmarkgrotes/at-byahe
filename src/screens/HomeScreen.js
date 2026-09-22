@@ -90,7 +90,10 @@ export default function HomeScreen() {
             <PackingListCard
               key={list.id}
               list={list}
-              onPress={() => navigation.navigate('Packing')}
+              onPress={() => {
+                selectTrip(list.tripId);
+                navigation.navigate('Packing');
+              }}
             />
           ))}
         </View>

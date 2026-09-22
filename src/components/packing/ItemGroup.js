@@ -4,16 +4,17 @@ import { cn } from '../../utils/cn';
 import { AppText } from '../common';
 import PackingItemRow from './PackingItemRow';
 
-// "Items Already Packed" / "Items Not Yet Packed": a heading with Delete + Edit, then the rows
+// "Items Already Packed" / "Items Not Yet Packed": a heading with Delete + Edit, then the rows.
+// `mode` is 'delete', 'edit' or null. Pressing the active button again ("Done") turns it off.
 export default function ItemGroup({
   title,
   packed,
   items,
-  deleteMode,
-  onToggleDeleteMode,
-  onEdit,
+  mode,
+  onToggleMode,
   onToggleItem,
   onDeleteItem,
+  onRenameItem,
 }) {
   if (items.length === 0) return null;
 
@@ -26,21 +27,25 @@ export default function ItemGroup({
 
         <View className="flex-row gap-2">
           <Pressable
-            onPress={onToggleDeleteMode}
+            onPress={() => onToggleMode('delete')}
             accessibilityRole="button"
             className="flex-row items-center gap-1.5 rounded-full bg-red-50 px-3 py-1.5"
           >
             <Trash2 size={14} color="#F87171" strokeWidth={1.75} />
-            <AppText className="font-sans-medium text-sm text-red-400">{deleteMode ? 'Done' : 'Delete'}</AppText>
+            <AppText className="font-sans-medium text-sm text-red-400">
+              {mode === 'delete' ? 'Done' : 'Delete'}
+            </AppText>
           </Pressable>
 
           <Pressable
-            onPress={onEdit}
+            onPress={() => onToggleMode('edit')}
             accessibilityRole="button"
             className="flex-row items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1.5"
           >
             <TextCursorInput size={14} color="#3B82F6" strokeWidth={1.75} />
-            <AppText className="font-sans-medium text-sm text-blue-500">Edit</AppText>
+            <AppText className="font-sans-medium text-sm text-blue-500">
+              {mode === 'edit' ? 'Done' : 'Edit'}
+            </AppText>
           </Pressable>
         </View>
       </View>
@@ -49,9 +54,11 @@ export default function ItemGroup({
         <PackingItemRow
           key={item.id}
           item={item}
-          showDelete={deleteMode}
+          showDelete={mode === 'delete'}
+          editMode={mode === 'edit'}
           onToggle={() => onToggleItem(item)}
           onDelete={() => onDeleteItem(item)}
+          onRename={(title) => onRenameItem(item, title)}
         />
       ))}
     </View>

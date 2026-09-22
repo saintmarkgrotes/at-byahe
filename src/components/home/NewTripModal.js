@@ -141,7 +141,7 @@ export default function NewTripModal({ visible, onClose, onSubmit }) {
               <TextInput
                 value={destination}
                 onChangeText={setDestination}
-                placeholder="e.g. Boracay Island"
+                placeholder="Where are you going?"
                 placeholderTextColor={colors.inactive}
                 className={inputClassName(!!errors.destination)}
               />
@@ -151,7 +151,7 @@ export default function NewTripModal({ visible, onClose, onSubmit }) {
               <TextInput
                 value={location}
                 onChangeText={setLocation}
-                placeholder="e.g. Boracay Island, Malay, Aklan"
+                placeholder="Address or area"
                 placeholderTextColor={colors.inactive}
                 className={inputClassName(false)}
               />
@@ -186,7 +186,7 @@ export default function NewTripModal({ visible, onClose, onSubmit }) {
                 onChange={setPackingItems}
                 text={packingText}
                 onChangeText={setPackingText}
-                placeholder="e.g. Sunscreen"
+                placeholder="Add something to bring"
               />
             </FormField>
 

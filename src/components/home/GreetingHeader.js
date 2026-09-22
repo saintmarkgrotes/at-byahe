@@ -16,7 +16,7 @@ export default function GreetingHeader({ name, greeting, dateLabel, onNewTripPre
         style={{ paddingHorizontal: SCREEN_PADDING }}
       >
         <View>
-          <AppText className="font-sans-medium text-[22px] text-brand-600">Hello {name},</AppText>
+          <AppText className="font-sans-medium text-[22px] text-brand-600">Hello{name ? ` ${name}` : ''},</AppText>
           <AppText variant="display">{greeting}</AppText>
 
           <View className="mt-3 flex-row items-center gap-2">

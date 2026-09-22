@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppText, Pill, ProgressBar } from '../components/common';
+import { AppText, EmptyState, Pill, ProgressBar } from '../components/common';
 import {
   DayHeader,
   ItineraryCard,
@@ -15,7 +15,7 @@ import colors from '../constants/colors';
 import { SCREEN_PADDING, TAB_BAR_HEIGHT } from '../constants/layout';
 import { useTrips } from '../context/TripsContext';
 import { formatFullDate, formatLongRange, getDayLabel, getTripLength } from '../utils/date';
-import PlaceholderScreen from './PlaceholderScreen';
+
 
 const TABS = ['Itinerary', 'Map', 'Notes'];
 
@@ -39,7 +39,18 @@ export default function ItineraryScreen() {
   } = useTrips();
   const [activeTab, setActiveTab] = useState('Itinerary');
 
-  if (!trip) return <PlaceholderScreen title="Itinerary" />;
+  if (!trip) {
+    return (
+      <View className="flex-1 justify-center bg-white" style={{ paddingHorizontal: SCREEN_PADDING }}>
+        <EmptyState
+          title="No trips yet"
+          message="Create a trip from Home with + New Trip and its itinerary will show here."
+          actionLabel="Go to Home"
+          onActionPress={() => navigation.navigate('Home')}
+        />
+      </View>
+    );
+  }
 
   const entries = itinerary.filter((entry) => entry.tripId === trip.id);
   const doneDates = doneDatesByTrip[trip.id] ?? []; // dates (e.g. '2026-09-19') marked done

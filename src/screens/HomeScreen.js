@@ -3,7 +3,7 @@ import { ScrollView, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { SectionHeader } from '../components/common';
+import { EmptyState, SectionHeader } from '../components/common';
 import {
   CalendarCard,
   GreetingHeader,
@@ -13,8 +13,8 @@ import {
   WeatherCard,
 } from '../components/home';
 import { SCREEN_PADDING, TAB_BAR_HEIGHT } from '../constants/layout';
+import { user } from '../constants/user';
 import { useTrips } from '../context/TripsContext';
-import { user, weather } from '../data/mockData';
 import useGreeting from '../hooks/useGreeting';
 import { formatHeaderDate, parseDate } from '../utils/date';
 
@@ -59,12 +59,18 @@ export default function HomeScreen() {
         <View className="mt-8">
           <SectionHeader
             title="Upcoming Trips"
-            subtitle="Swipe through your trips"
-            actionLabel="View All"
+            subtitle={trips.length > 0 ? 'Swipe through your trips' : 'Plan your first trip'}
+            actionLabel={trips.length > 0 ? 'View All' : undefined}
             className="px-6"
             onActionPress={() => navigation.navigate('Itinerary')}
           />
-          <TripCarousel trips={trips} onTripPress={handleTripPress} />
+          {trips.length > 0 ? (
+            <TripCarousel trips={trips} onTripPress={handleTripPress} />
+          ) : (
+            <View style={{ paddingHorizontal: SCREEN_PADDING }}>
+              <EmptyState title="No trips yet" message="Tap + New Trip to plan your first trip." />
+            </View>
+          )}
         </View>
 
         {/* Calendar + weather */}
@@ -75,27 +81,30 @@ export default function HomeScreen() {
           </View>
           <View className="w-[120px]">
             <SectionHeader size="sm" title="Today" />
-            <WeatherCard
-              temperature={weather.temperature}
-              location={weather.location}
-              className="flex-1"
-            />
+            <WeatherCard className="flex-1" />
           </View>
         </View>
 
         {/* Packing lists */}
         <View className="mt-8" style={{ paddingHorizontal: SCREEN_PADDING }}>
           <SectionHeader title="Packing List" />
-          {packingLists.map((list) => (
-            <PackingListCard
-              key={list.id}
-              list={list}
-              onPress={() => {
-                selectTrip(list.tripId);
-                navigation.navigate('Packing');
-              }}
+          {packingLists.length === 0 ? (
+            <EmptyState
+              title="No packing lists yet"
+              message="Add things to bring when you create a trip, or list them on the Packing tab."
             />
-          ))}
+          ) : (
+            packingLists.map((list) => (
+              <PackingListCard
+                key={list.id}
+                list={list}
+                onPress={() => {
+                  selectTrip(list.tripId);
+                  navigation.navigate('Packing');
+                }}
+              />
+            ))
+          )}
         </View>
       </ScrollView>
 

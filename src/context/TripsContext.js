@@ -1,16 +1,14 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import {
-  itinerary as initialItinerary,
-  packingLists as initialPackingLists,
-  trips as initialTrips,
-} from '../data/mockData';
 
-// Shared app data. mockData.js is the STARTING data; this file holds the live copy
-// so a screen can add a trip and every other screen sees it.
+// Shared app data. Everything starts empty and is filled in by the user, so a screen can
+// add a trip and every other screen sees it.
 const TripsContext = createContext(null);
 
 // Packing items without a category go under this heading
 export const DEFAULT_CATEGORY = 'Essentials';
+
+// Unique id, even if two things are created in the same millisecond
+const uniqueId = (prefix) => `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
 const slugify = (text) =>
   text
@@ -20,11 +18,11 @@ const slugify = (text) =>
     .replace(/^-|-$/g, '');
 
 export function TripsProvider({ children }) {
-  const [trips, setTrips] = useState(initialTrips);
-  const [rawPackingLists, setPackingLists] = useState(initialPackingLists);
-  const [itinerary, setItinerary] = useState(initialItinerary);
+  const [trips, setTrips] = useState([]);
+  const [rawPackingLists, setPackingLists] = useState([]);
+  const [itinerary, setItinerary] = useState([]);
   const [doneDatesByTrip, setDoneDatesByTrip] = useState({}); // { tripId: ['2026-09-19', ...] }
-  const [selectedTripId, setSelectedTripId] = useState(initialTrips[0]?.id ?? null);
+  const [selectedTripId, setSelectedTripId] = useState(null);
 
   // Packed / total are always calculated from the items, so Home and Packing never disagree
   const packingLists = useMemo(
@@ -49,9 +47,9 @@ export function TripsProvider({ children }) {
   // form = { destination, location, startDate, endDate, packingItems[], activities[], activityTime }
   const addTrip = useCallback((form) => {
     const { destination, location, startDate, endDate, packingItems, activities, activityTime } = form;
-    const id = `${slugify(destination) || 'trip'}-${Date.now()}`;
+    const id = uniqueId(slugify(destination) || 'trip');
 
-    // Same shape as an entry in mockData.trips
+    // A trip
     const trip = {
       id,
       destination,
@@ -64,7 +62,7 @@ export function TripsProvider({ children }) {
     // Keep trips ordered by start date ('2026-09-19' strings sort correctly)
     setTrips((current) => [...current, trip].sort((a, b) => a.startDate.localeCompare(b.startDate)));
 
-    // Same shape as mockData.packingLists, plus an `items` list of what to bring
+    // A packing list: the things to bring, all unpacked to start with
     if (packingItems.length > 0) {
       setPackingLists((current) => [
         ...current,
@@ -86,7 +84,7 @@ export function TripsProvider({ children }) {
       ]);
     }
 
-    // Same shape as mockData.itinerary: one block on the first day
+    // Itinerary: one block on the first day
     if (activities.length > 0) {
       setItinerary((current) => [
         ...current,
@@ -153,12 +151,28 @@ export function TripsProvider({ children }) {
     );
   }, []);
 
+  // Renames an item. An empty name is ignored so an item can never end up blank.
+  const renamePackingItem = useCallback((listId, itemId, title) => {
+    const name = title.trim();
+    if (!name) return;
+    setPackingLists((current) =>
+      current.map((list) =>
+        list.id !== listId
+          ? list
+          : {
+              ...list,
+              items: list.items.map((item) => (item.id === itemId ? { ...item, title: name } : item)),
+            }
+      )
+    );
+  }, []);
+
   // Adds an unpacked item. If the trip has no packing list yet, one is created for it.
   const addPackingItem = useCallback(
     (tripId, title, category = DEFAULT_CATEGORY) => {
       const trip = trips.find((entry) => entry.id === tripId);
       const item = {
-        id: `${tripId}-p${Date.now()}`,
+        id: uniqueId(`${tripId}-p`),
         title,
         packed: false,
         category,
@@ -213,6 +227,7 @@ export function TripsProvider({ children }) {
       toggleDayDone,
       togglePacked,
       deletePackingItem,
+      renamePackingItem,
       addPackingItem,
     }),
     [
@@ -228,6 +243,7 @@ export function TripsProvider({ children }) {
       toggleDayDone,
       togglePacked,
       deletePackingItem,
+      renamePackingItem,
       addPackingItem,
     ]
   );

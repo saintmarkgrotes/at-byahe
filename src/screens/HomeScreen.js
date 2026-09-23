@@ -77,11 +77,11 @@ export default function HomeScreen() {
         <View className="mt-4 flex-row gap-3" style={{ paddingHorizontal: SCREEN_PADDING }}>
           <View className="flex-1">
             <SectionHeader size="sm" title="Calendar" />
-            <CalendarCard today={today} tripRange={tripRange} className="flex-1" />
+            <CalendarCard today={today} tripRange={tripRange} />
           </View>
           <View className="w-[120px]">
             <SectionHeader size="sm" title="Today" />
-            <WeatherCard className="flex-1" />
+            <WeatherCard />
           </View>
         </View>
 

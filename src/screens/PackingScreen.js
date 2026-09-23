@@ -12,19 +12,16 @@ import { DEFAULT_CATEGORY, useTrips } from '../context/TripsContext';
 export default function PackingScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const {
-    selectedTrip: trip,
-    packingLists,
-    togglePacked,
-    addPackingItem,
-    deletePackingItem,
-    renamePackingItem,
-  } = useTrips();
+  // All trips now, not just the selected one, so every trip's packing list shows up here.
+  const { trips, packingLists, togglePacked, addPackingItem, deletePackingItem, renamePackingItem } =
+    useTrips();
 
-  const [addingCategory, setAddingCategory] = useState(null); // which band has its Add box open
-  const [activeMode, setActiveMode] = useState(null); // { group: 'Essentials:packed', mode: 'delete' | 'edit' }
+  // Keys are prefixed with the trip id so two trips with a category of the same
+  // name (e.g. both have "Essentials") don't open/close or edit each other's rows.
+  const [addingCategory, setAddingCategory] = useState(null); // `${tripId}:${category}` currently open
+  const [activeMode, setActiveMode] = useState(null); // { group: `${tripId}:${category}:packed`, mode }
 
-  if (!trip) {
+  if (trips.length === 0) {
     return (
       <View className="flex-1 justify-center bg-white" style={{ paddingHorizontal: SCREEN_PADDING }}>
         <EmptyState
@@ -37,13 +34,7 @@ export default function PackingScreen() {
     );
   }
 
-  const list = packingLists.find((entry) => entry.tripId === trip.id);
-  const items = list?.items ?? [];
   const categoryOf = (item) => item.category ?? DEFAULT_CATEGORY;
-
-  // One band per category. With no items yet we still show the default band so "Add" is reachable.
-  const categories = items.length > 0 ? [...new Set(items.map(categoryOf))] : [DEFAULT_CATEGORY];
-
   const modeOf = (group) => (activeMode?.group === group ? activeMode.mode : null);
   const toggleMode = (group, mode) =>
     setActiveMode((current) =>
@@ -59,57 +50,71 @@ export default function PackingScreen() {
       >
         <ItineraryHeader
           title="Packing List"
-          dateLabel={`${trip.destination} Trip`}
+          dateLabel={`${trips.length} trip${trips.length > 1 ? 's' : ''}`}
           onBackPress={() => navigation.navigate('Home')}
         />
 
         <View style={{ paddingHorizontal: SCREEN_PADDING }}>
-          {categories.map((category, index) => {
-            const inCategory = items.filter((item) => categoryOf(item) === category);
-            const packed = inCategory.filter((item) => item.packed);
-            const notPacked = inCategory.filter((item) => !item.packed);
-            const adding = addingCategory === category;
+          {trips.map((trip, tripIndex) => {
+            const list = packingLists.find((entry) => entry.tripId === trip.id);
+            const items = list?.items ?? [];
+            // One band per category. With no items yet we still show the default band so "Add" is reachable.
+            const categories = items.length > 0 ? [...new Set(items.map(categoryOf))] : [DEFAULT_CATEGORY];
 
             return (
-              <View key={category} className={index === 0 ? 'mt-6' : 'mt-10'}>
-                <CategoryBand
-                  title={category}
-                  adding={adding}
-                  onAddPress={() => setAddingCategory(adding ? null : category)}
-                />
-                <View className="mt-3 h-px bg-gray-300" />
+              <View key={trip.id} className={tripIndex === 0 ? 'mt-6' : 'mt-10'}>
+                <AppText variant="heading">{trip.destination}</AppText>
 
-                {adding ? (
-                  <AddItemRow onAdd={(title) => addPackingItem(trip.id, title, category)} />
-                ) : null}
+                {categories.map((category, index) => {
+                  const inCategory = items.filter((item) => categoryOf(item) === category);
+                  const packed = inCategory.filter((item) => item.packed);
+                  const notPacked = inCategory.filter((item) => !item.packed);
+                  const addingKey = `${trip.id}:${category}`;
+                  const adding = addingCategory === addingKey;
 
-                {inCategory.length === 0 ? (
-                  <AppText variant="muted" className="mt-8 text-center">
-                    Nothing to pack yet. Tap Add and list everything you need to bring.
-                  </AppText>
-                ) : null}
+                  return (
+                    <View key={category} className={index === 0 ? 'mt-4' : 'mt-10'}>
+                      <CategoryBand
+                        title={category}
+                        adding={adding}
+                        onAddPress={() => setAddingCategory(adding ? null : addingKey)}
+                      />
+                      <View className="mt-3 h-px bg-gray-300" />
 
-                <ItemGroup
-                  title="Items Already Packed"
-                  packed
-                  items={packed}
-                  mode={modeOf(`${category}:packed`)}
-                  onToggleMode={(mode) => toggleMode(`${category}:packed`, mode)}
-                  onToggleItem={(item) => togglePacked(list.id, item.id)}
-                  onDeleteItem={(item) => deletePackingItem(list.id, item.id)}
-                  onRenameItem={(item, title) => renamePackingItem(list.id, item.id, title)}
-                />
+                      {adding ? (
+                        <AddItemRow onAdd={(title) => addPackingItem(trip.id, title, category)} />
+                      ) : null}
 
-                <ItemGroup
-                  title="Items Not Yet Packed"
-                  packed={false}
-                  items={notPacked}
-                  mode={modeOf(`${category}:notPacked`)}
-                  onToggleMode={(mode) => toggleMode(`${category}:notPacked`, mode)}
-                  onToggleItem={(item) => togglePacked(list.id, item.id)}
-                  onDeleteItem={(item) => deletePackingItem(list.id, item.id)}
-                  onRenameItem={(item, title) => renamePackingItem(list.id, item.id, title)}
-                />
+                      {inCategory.length === 0 ? (
+                        <AppText variant="muted" className="mt-8 text-center">
+                          Nothing to pack yet. Tap Add and list everything you need to bring.
+                        </AppText>
+                      ) : null}
+
+                      <ItemGroup
+                        title="Items Already Packed"
+                        packed
+                        items={packed}
+                        mode={modeOf(`${trip.id}:${category}:packed`)}
+                        onToggleMode={(mode) => toggleMode(`${trip.id}:${category}:packed`, mode)}
+                        onToggleItem={(item) => togglePacked(list.id, item.id)}
+                        onDeleteItem={(item) => deletePackingItem(list.id, item.id)}
+                        onRenameItem={(item, title) => renamePackingItem(list.id, item.id, title)}
+                      />
+
+                      <ItemGroup
+                        title="Items Not Yet Packed"
+                        packed={false}
+                        items={notPacked}
+                        mode={modeOf(`${trip.id}:${category}:notPacked`)}
+                        onToggleMode={(mode) => toggleMode(`${trip.id}:${category}:notPacked`, mode)}
+                        onToggleItem={(item) => togglePacked(list.id, item.id)}
+                        onDeleteItem={(item) => deletePackingItem(list.id, item.id)}
+                        onRenameItem={(item, title) => renamePackingItem(list.id, item.id, title)}
+                      />
+                    </View>
+                  );
+                })}
               </View>
             );
           })}

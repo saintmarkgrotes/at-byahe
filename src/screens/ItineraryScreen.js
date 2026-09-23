@@ -29,17 +29,12 @@ export default function ItineraryScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
-    const {
-    selectedTrip: trip,
-    itinerary,
-    doneDatesByTrip,
-    toggleActivity,
-    toggleDayDone,
-    deleteEntry,
-  } = useTrips();
+  // All trips now, not just the selected one, so every trip's itinerary shows up here.
+  const { trips, itinerary, doneDatesByTrip, toggleActivity, toggleDayDone, deleteEntry } =
+    useTrips();
   const [activeTab, setActiveTab] = useState('Itinerary');
 
-  if (!trip) {
+  if (trips.length === 0) {
     return (
       <View className="flex-1 justify-center bg-white" style={{ paddingHorizontal: SCREEN_PADDING }}>
         <EmptyState
@@ -52,12 +47,6 @@ export default function ItineraryScreen() {
     );
   }
 
-  const entries = itinerary.filter((entry) => entry.tripId === trip.id);
-  const doneDates = doneDatesByTrip[trip.id] ?? []; // dates (e.g. '2026-09-19') marked done
-
-  const totalDays = getTripLength(trip.startDate, trip.endDate);
-  const progress = totalDays > 0 ? doneDates.length / totalDays : 0;
-
   return (
     <View className="flex-1 bg-white">
       <ScrollView
@@ -65,8 +54,8 @@ export default function ItineraryScreen() {
         contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 24 }}
       >
         <ItineraryHeader
-          title={trip.destination}
-          dateLabel={formatLongRange(trip.startDate, trip.endDate)}
+          title="Itinerary"
+          dateLabel={`${trips.length} trip${trips.length > 1 ? 's' : ''}`}
           onBackPress={() => navigation.navigate('Home')}
         />
 
@@ -75,65 +64,79 @@ export default function ItineraryScreen() {
             <SegmentTabs tabs={TABS} active={activeTab} onChange={setActiveTab} />
           </View>
 
-          {/* Trip progress */}
-          <View className="mt-6">
-            <View className="mb-2 flex-row justify-between">
-              <AppText className="font-sans-medium text-base">Trip progress</AppText>
-              <AppText className="font-sans-medium text-base">
-                {doneDates.length}/{totalDays}
-              </AppText>
-            </View>
-            <ProgressBar value={progress} className="bg-gray-200" />
-          </View>
-
           <View className="mt-5 h-px bg-gray-200" />
 
           {activeTab === 'Itinerary' ? (
-            <>
-              {/* "Itinerary" title band + trip status */}
-              <LinearGradient
-                colors={[colors.mint, 'rgba(200,245,223,0)']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{
-                  marginTop: 16,
-                  paddingHorizontal: 12,
-                  paddingVertical: 8,
-                  borderRadius: 8,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <AppText variant="display" className="text-[40px] leading-[48px] text-brand-600">
-                  Itinerary
-                </AppText>
-                <Pill label={STATUS_LABELS[trip.status]} tone="brand" />
-              </LinearGradient>
+            // One block per trip: title + status + progress, then that trip's day entries.
+            trips.map((trip) => {
+              const entries = itinerary.filter((entry) => entry.tripId === trip.id);
+              const doneDates = doneDatesByTrip[trip.id] ?? [];
+              const totalDays = getTripLength(trip.startDate, trip.endDate);
+              const progress = totalDays > 0 ? doneDates.length / totalDays : 0;
 
-              {entries.length === 0 ? (
-                <AppText variant="muted" className="mt-8 text-center">
-                  No plans yet
-                </AppText>
-              ) : (
-                entries.map((entry) => (
-                  <View key={entry.id}>
-                    <DayHeader
-                      dayLabel={getDayLabel(trip.startDate, entry.date)}
-                      dateLabel={formatFullDate(entry.date)}
-                      done={doneDates.includes(entry.date)}
-                      onToggleDone={() => toggleDayDone(trip.id, entry.date)}
-                    />
-                    <ItineraryCard
-                      entry={entry}
-                      onToggleActivity={toggleActivity}
-                      onDelete={() => deleteEntry(entry.id)}
-                      // onEdit: no edit form exists yet. Wire it up when you build one.
-                    />
+              return (
+                <View key={trip.id} className="mt-8">
+                  <LinearGradient
+                    colors={[colors.mint, 'rgba(200,245,223,0)']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={{
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 8,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <View className="shrink">
+                      <AppText
+                        variant="display"
+                        numberOfLines={1}
+                        className="text-[28px] leading-[34px] text-brand-600"
+                      >
+                        {trip.destination}
+                      </AppText>
+                      <AppText variant="muted" className="mt-0.5">
+                        {formatLongRange(trip.startDate, trip.endDate)}
+                      </AppText>
+                    </View>
+                    <Pill label={STATUS_LABELS[trip.status]} tone="brand" />
+                  </LinearGradient>
+
+                  <View className="mt-3 flex-row justify-between">
+                    <AppText className="font-sans-medium text-base">Trip progress</AppText>
+                    <AppText className="font-sans-medium text-base">
+                      {doneDates.length}/{totalDays}
+                    </AppText>
                   </View>
-                ))
-              )}
-            </>
+                  <ProgressBar value={progress} className="mt-1 bg-gray-200" />
+
+                  {entries.length === 0 ? (
+                    <AppText variant="muted" className="mt-8 text-center">
+                      No plans yet
+                    </AppText>
+                  ) : (
+                    entries.map((entry) => (
+                      <View key={entry.id}>
+                        <DayHeader
+                          dayLabel={getDayLabel(trip.startDate, entry.date)}
+                          dateLabel={formatFullDate(entry.date)}
+                          done={doneDates.includes(entry.date)}
+                          onToggleDone={() => toggleDayDone(trip.id, entry.date)}
+                        />
+                        <ItineraryCard
+                          entry={entry}
+                          onToggleActivity={toggleActivity}
+                          onDelete={() => deleteEntry(entry.id)}
+                          // onEdit: no edit form exists yet. Wire it up when you build one.
+                        />
+                      </View>
+                    ))
+                  )}
+                </View>
+              );
+            })
           ) : (
             <View className="mt-16 items-center">
               <AppText variant="heading">{activeTab}</AppText>

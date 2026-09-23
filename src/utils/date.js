@@ -69,3 +69,18 @@ export const isValidIsoDate = (iso) => {
   const date = new Date(year, month - 1, day);
   return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day;
 };
+
+/** Date -> '2026-09-19' */
+export const toIsoDate = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+/** Date -> 'Sep 19, 2026' */
+export const formatDateLabel = (date) => `${formatShortDate(date)}, ${date.getFullYear()}`;
+
+/** Date -> '8:30 AM' (matches the time format used in itinerary entries) */
+export const formatTimeLabel = (date) => {
+  const minutes = date.getMinutes();
+  const hours = date.getHours() % 12 || 12;
+  const period = date.getHours() >= 12 ? 'PM' : 'AM';
+  return `${hours}:${String(minutes).padStart(2, '0')} ${period}`;
+};

@@ -12,10 +12,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X } from 'lucide-react-native';
 import colors from '../../constants/colors';
 import { SCREEN_PADDING } from '../../constants/layout';
-import { isValidIsoDate } from '../../utils/date';
+import { toIsoDate, formatTimeLabel } from '../../utils/date';
 import { AppText } from '../common';
 import ChipInput from './ChipInput';
 import FormField, { inputClassName } from './FormField';
+import PickerField from './PickerField';
 
 // Adds the text still sitting in a box (not yet "Added") to the list when saving
 const withPending = (items, text) => {
@@ -24,7 +25,7 @@ const withPending = (items, text) => {
   return value && !exists ? [...items, value] : items;
 };
 
-// Bottom-sheet form for planning a new trip. Fields follow mockData:
+// Bottom-sheet form for planning a new trip. Where each field ends up:
 //   trips        -> destination, startDate, endDate
 //   itinerary    -> location, time, activities
 //   packingLists -> things to bring
@@ -33,25 +34,25 @@ export default function NewTripModal({ visible, onClose, onSubmit }) {
 
   const [destination, setDestination] = useState('');
   const [location, setLocation] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState(null); // Date | null
+  const [endDate, setEndDate] = useState(null); // Date | null
   const [packingItems, setPackingItems] = useState([]);
   const [packingText, setPackingText] = useState('');
   const [activities, setActivities] = useState([]);
   const [activityText, setActivityText] = useState('');
-  const [activityTime, setActivityTime] = useState('');
+  const [activityTime, setActivityTime] = useState(null); // Date | null
   const [errors, setErrors] = useState({});
 
   const resetForm = () => {
     setDestination('');
     setLocation('');
-    setStartDate('');
-    setEndDate('');
+    setStartDate(null);
+    setEndDate(null);
     setPackingItems([]);
     setPackingText('');
     setActivities([]);
     setActivityText('');
-    setActivityTime('');
+    setActivityTime(null);
     setErrors({});
   };
 
@@ -63,19 +64,16 @@ export default function NewTripModal({ visible, onClose, onSubmit }) {
   const handleSave = () => {
     const finalPacking = withPending(packingItems, packingText);
     const finalActivities = withPending(activities, activityText);
-    const start = startDate.trim();
-    const end = endDate.trim();
-    const time = activityTime.trim();
 
     const nextErrors = {};
     if (!destination.trim()) nextErrors.destination = 'Enter where you are going.';
-    if (!isValidIsoDate(start)) nextErrors.startDate = 'Use YYYY-MM-DD, e.g. 2026-09-19.';
-    if (!isValidIsoDate(end)) nextErrors.endDate = 'Use YYYY-MM-DD, e.g. 2026-09-23.';
-    if (!nextErrors.startDate && !nextErrors.endDate && end < start) {
+    if (!startDate) nextErrors.startDate = 'Pick a start date.';
+    if (!endDate) nextErrors.endDate = 'Pick an end date.';
+    if (startDate && endDate && toIsoDate(endDate) < toIsoDate(startDate)) {
       nextErrors.endDate = 'End date must be on or after the start date.';
     }
-    if (finalActivities.length > 0 && !time) {
-      nextErrors.activityTime = 'Add a start time for your activities, e.g. 8:30 AM.';
+    if (finalActivities.length > 0 && !activityTime) {
+      nextErrors.activityTime = 'Pick a start time for your activities.';
     }
 
     setErrors(nextErrors);
@@ -84,11 +82,11 @@ export default function NewTripModal({ visible, onClose, onSubmit }) {
     onSubmit({
       destination: destination.trim(),
       location: location.trim(),
-      startDate: start,
-      endDate: end,
+      startDate: toIsoDate(startDate),
+      endDate: toIsoDate(endDate),
       packingItems: finalPacking,
       activities: finalActivities,
-      activityTime: time,
+      activityTime: activityTime ? formatTimeLabel(activityTime) : '',
     });
     resetForm();
   };
@@ -159,23 +157,26 @@ export default function NewTripModal({ visible, onClose, onSubmit }) {
 
             <View className="flex-row gap-3">
               <FormField label="Start date" error={errors.startDate} className="flex-1">
-                <TextInput
+                <PickerField
+                  mode="date"
                   value={startDate}
-                  onChangeText={setStartDate}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={colors.inactive}
-                  keyboardType="numbers-and-punctuation"
-                  className={inputClassName(!!errors.startDate)}
+                  onChange={(date) => {
+                    setStartDate(date);
+                    // Keep the end date valid if it was set before an even later start date
+                    if (endDate && toIsoDate(endDate) < toIsoDate(date)) setEndDate(null);
+                  }}
+                  placeholder="Select date"
+                  hasError={!!errors.startDate}
                 />
               </FormField>
               <FormField label="End date" error={errors.endDate} className="flex-1">
-                <TextInput
+                <PickerField
+                  mode="date"
                   value={endDate}
-                  onChangeText={setEndDate}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={colors.inactive}
-                  keyboardType="numbers-and-punctuation"
-                  className={inputClassName(!!errors.endDate)}
+                  onChange={setEndDate}
+                  placeholder="Select date"
+                  hasError={!!errors.endDate}
+                  minimumDate={startDate ?? undefined}
                 />
               </FormField>
             </View>
@@ -196,17 +197,17 @@ export default function NewTripModal({ visible, onClose, onSubmit }) {
                 onChange={setActivities}
                 text={activityText}
                 onChangeText={setActivityText}
-                placeholder="e.g. Island Hoping"
+                placeholder="Add an activity"
               />
             </FormField>
 
             <FormField label="Start time" error={errors.activityTime} hint="Needed if you add activities.">
-              <TextInput
+              <PickerField
+                mode="time"
                 value={activityTime}
-                onChangeText={setActivityTime}
-                placeholder="e.g. 8:30 AM"
-                placeholderTextColor={colors.inactive}
-                className={inputClassName(!!errors.activityTime)}
+                onChange={setActivityTime}
+                placeholder="Select time"
+                hasError={!!errors.activityTime}
               />
             </FormField>
           </ScrollView>

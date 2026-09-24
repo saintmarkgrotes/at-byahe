@@ -94,7 +94,10 @@ export default function PackingScreen() {
                       <View className="mt-3 h-px bg-gray-300" />
 
                       {adding ? (
-                        <AddItemRow onAdd={(title) => addPackingItem(trip.id, title, category)} />
+                        <AddItemRow
+                          onAdd={(title) => addPackingItem(trip.id, title, category)}
+                          onClose={() => setAddingCategory(null)}
+                        />
                       ) : null}
 
                       {inCategory.length === 0 ? (

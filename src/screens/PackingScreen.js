@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Alert, ScrollView, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -20,6 +20,18 @@ export default function PackingScreen() {
   // name (e.g. both have "Essentials") don't open/close or edit each other's rows.
   const [addingCategory, setAddingCategory] = useState(null); // `${tripId}:${category}` currently open
   const [activeMode, setActiveMode] = useState(null); // { group: `${tripId}:${category}:packed`, mode }
+
+  // Ask before deleting, so a stray tap can't remove an item from the list
+  const confirmDeleteItem = (trip, list, item) => {
+    Alert.alert(
+      'Delete this item?',
+      `"${item.title}" will be removed from your ${trip.destination} packing list. This can't be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => deletePackingItem(list.id, item.id) },
+      ]
+    );
+  };
 
   if (trips.length === 0) {
     return (
@@ -98,7 +110,7 @@ export default function PackingScreen() {
                         mode={modeOf(`${trip.id}:${category}:packed`)}
                         onToggleMode={(mode) => toggleMode(`${trip.id}:${category}:packed`, mode)}
                         onToggleItem={(item) => togglePacked(list.id, item.id)}
-                        onDeleteItem={(item) => deletePackingItem(list.id, item.id)}
+                        onDeleteItem={(item) => confirmDeleteItem(trip, list, item)}
                         onRenameItem={(item, title) => renamePackingItem(list.id, item.id, title)}
                       />
 
@@ -109,7 +121,7 @@ export default function PackingScreen() {
                         mode={modeOf(`${trip.id}:${category}:notPacked`)}
                         onToggleMode={(mode) => toggleMode(`${trip.id}:${category}:notPacked`, mode)}
                         onToggleItem={(item) => togglePacked(list.id, item.id)}
-                        onDeleteItem={(item) => deletePackingItem(list.id, item.id)}
+                        onDeleteItem={(item) => confirmDeleteItem(trip, list, item)}
                         onRenameItem={(item, title) => renamePackingItem(list.id, item.id, title)}
                       />
                     </View>

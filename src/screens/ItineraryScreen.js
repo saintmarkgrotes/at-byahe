@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Alert, ScrollView, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -33,6 +33,18 @@ export default function ItineraryScreen() {
   const { trips, itinerary, doneDatesByTrip, toggleActivity, toggleDayDone, deleteEntry } =
     useTrips();
   const [activeTab, setActiveTab] = useState('Itinerary');
+
+    // Ask before deleting, so a stray tap can't wipe out a plan
+  const confirmDelete = (entry, trip) => {
+    Alert.alert(
+      'Delete this plan?',
+      `The ${entry.time} plan at ${entry.location} will be removed from your ${trip.destination} itinerary. This can't be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => deleteEntry(entry.id) },
+      ]
+    );
+  };
 
   if (trips.length === 0) {
     return (
@@ -128,7 +140,7 @@ export default function ItineraryScreen() {
                         <ItineraryCard
                           entry={entry}
                           onToggleActivity={toggleActivity}
-                          onDelete={() => deleteEntry(entry.id)}
+                          onDelete={() => confirmDelete(entry, trip)}
                           // onEdit: no edit form exists yet. Wire it up when you build one.
                         />
                       </View>

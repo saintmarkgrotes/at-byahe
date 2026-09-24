@@ -50,7 +50,7 @@ export function TripsProvider({ children }) {
       })),
     [rawTrips, itinerary]
   );
-  
+
   // The trip the Itinerary screen and Packing screen show
   const selectedTrip = trips.find((trip) => trip.id === selectedTripId) ?? trips[0] ?? null;
 
@@ -138,6 +138,29 @@ export function TripsProvider({ children }) {
     setItinerary((current) => current.filter((entry) => entry.id !== entryId));
   }, []);
 
+    // Edits an entry's time, location and activities (changes = { time, location, activities[] }).
+  // An activity whose title is unchanged keeps its done tick; a new title starts not done.
+  const updateEntry = useCallback((entryId, changes) => {
+    const { time, location, activities } = changes;
+    setItinerary((current) =>
+      current.map((entry) => {
+        if (entry.id !== entryId) return entry;
+
+        const nextActivities = activities.map((title) => {
+          const existing = entry.activities.find(
+            (activity) => activity.title.toLowerCase() === title.toLowerCase()
+          );
+          return existing
+            ? { ...existing, title }
+            : { id: uniqueId(`${entry.id}-a`), title, done: false };
+        });
+
+        return { ...entry, time, location, activities: nextActivities };
+      })
+    );
+  }, []);
+
+  
   const togglePacked = useCallback((listId, itemId) => {
     setPackingLists((current) =>
       current.map((list) =>
@@ -236,6 +259,7 @@ export function TripsProvider({ children }) {
       addTrip,
       toggleActivity,
       deleteEntry,
+      updateEntry,
       toggleDayDone,
       togglePacked,
       deletePackingItem,
@@ -252,6 +276,7 @@ export function TripsProvider({ children }) {
       addTrip,
       toggleActivity,
       deleteEntry,
+      updateEntry,
       toggleDayDone,
       togglePacked,
       deletePackingItem,

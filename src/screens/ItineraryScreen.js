@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText, EmptyState, Pill, ProgressBar } from '../components/common';
 import {
   DayHeader,
+  EditEntryModal,
   ItineraryCard,
   ItineraryHeader,
   SegmentTabs,
@@ -30,9 +31,18 @@ export default function ItineraryScreen() {
   const insets = useSafeAreaInsets();
 
   // All trips now, not just the selected one, so every trip's itinerary shows up here.
-  const { trips, itinerary, doneDatesByTrip, toggleActivity, toggleDayDone, deleteEntry } =
-    useTrips();
+  const {
+    trips,
+    itinerary,
+    doneDatesByTrip,
+    toggleActivity,
+    toggleDayDone,
+    deleteEntry,
+    updateEntry,
+  } = useTrips();
+
   const [activeTab, setActiveTab] = useState('Itinerary');
+  const [editingEntry, setEditingEntry] = useState(null); // the entry being edited, or null
 
     // Ask before deleting, so a stray tap can't wipe out a plan
   const confirmDelete = (entry, trip) => {
@@ -46,6 +56,14 @@ export default function ItineraryScreen() {
     );
   };
 
+  const handleSaveEdit = (entryId, changes) => {
+    updateEntry(entryId, changes);
+    setEditingEntry(null);
+  };
+
+  // Used as the fallback location when the edited location is left empty
+  const editingDestination = trips.find((trip) => trip.id === editingEntry?.tripId)?.destination ?? '';
+  
   if (trips.length === 0) {
     return (
       <View className="flex-1 justify-center bg-white" style={{ paddingHorizontal: SCREEN_PADDING }}>
@@ -141,7 +159,7 @@ export default function ItineraryScreen() {
                           entry={entry}
                           onToggleActivity={toggleActivity}
                           onDelete={() => confirmDelete(entry, trip)}
-                          // onEdit: no edit form exists yet. Wire it up when you build one.
+                          onEdit={() => setEditingEntry(entry)}
                         />
                       </View>
                     ))
@@ -157,6 +175,12 @@ export default function ItineraryScreen() {
           )}
         </View>
       </ScrollView>
+      <EditEntryModal
+        entry={editingEntry}
+        destination={editingDestination}
+        onClose={() => setEditingEntry(null)}
+        onSave={handleSaveEdit}
+      />
     </View>
   );
 }

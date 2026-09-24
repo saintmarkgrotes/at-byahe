@@ -15,7 +15,7 @@ import {
 import colors from '../constants/colors';
 import { SCREEN_PADDING, TAB_BAR_HEIGHT } from '../constants/layout';
 import { useTrips } from '../context/TripsContext';
-import { formatFullDate, formatLongRange, getDayLabel, getTripLength } from '../utils/date';
+import { formatFullDate, formatLongRange, getDayLabel } from '../utils/date';
 
 
 const TABS = ['Itinerary', 'Map', 'Notes'];
@@ -101,8 +101,11 @@ export default function ItineraryScreen() {
             trips.map((trip) => {
               const entries = itinerary.filter((entry) => entry.tripId === trip.id);
               const doneDates = doneDatesByTrip[trip.id] ?? [];
-              const totalDays = getTripLength(trip.startDate, trip.endDate);
-              const progress = totalDays > 0 ? doneDates.length / totalDays : 0;
+              // Progress counts the days that have a plan, not every calendar day of the trip
+              const plannedDates = [...new Set(entries.map((entry) => entry.date))];
+              const totalDays = plannedDates.length;
+              const doneDays = plannedDates.filter((date) => doneDates.includes(date)).length;
+              const progress = totalDays > 0 ? doneDays / totalDays : 0;
 
               return (
                 <View key={trip.id} className="mt-8">
@@ -137,7 +140,7 @@ export default function ItineraryScreen() {
                   <View className="mt-3 flex-row justify-between">
                     <AppText className="font-sans-medium text-base">Trip progress</AppText>
                     <AppText className="font-sans-medium text-base">
-                      {doneDates.length}/{totalDays}
+                      {doneDays}/{totalDays}
                     </AppText>
                   </View>
                   <ProgressBar value={progress} className="mt-1 bg-gray-200" />

@@ -84,3 +84,13 @@ export const formatTimeLabel = (date) => {
   const period = date.getHours() >= 12 ? 'PM' : 'AM';
   return `${hours}:${String(minutes).padStart(2, '0')} ${period}`;
 };
+
+/** '8:30 AM' -> Date (today at 8:30). Returns null if the text isn't in that format. */
+export const parseTimeLabel = (label) => {
+  const match = /^(\d{1,2}):(\d{2}) (AM|PM)$/.exec(label ?? '');
+  if (!match) return null;
+  const hours = (Number(match[1]) % 12) + (match[3] === 'PM' ? 12 : 0);
+  const date = new Date();
+  date.setHours(hours, Number(match[2]), 0, 0);
+  return date;
+};

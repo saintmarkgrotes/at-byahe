@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Alert, ScrollView, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText, EmptyState, Pill, ProgressBar } from '../components/common';
 import {
   DayHeader,
+  EditEntryModal,
   ItineraryCard,
   ItineraryHeader,
   SegmentTabs,
@@ -14,7 +15,7 @@ import {
 import colors from '../constants/colors';
 import { SCREEN_PADDING, TAB_BAR_HEIGHT } from '../constants/layout';
 import { useTrips } from '../context/TripsContext';
-import { formatFullDate, formatLongRange, getDayLabel, getTripLength } from '../utils/date';
+import { formatFullDate, formatLongRange, getDayLabel } from '../utils/date';
 
 
 const TABS = ['Itinerary', 'Map', 'Notes'];
@@ -30,10 +31,39 @@ export default function ItineraryScreen() {
   const insets = useSafeAreaInsets();
 
   // All trips now, not just the selected one, so every trip's itinerary shows up here.
-  const { trips, itinerary, doneDatesByTrip, toggleActivity, toggleDayDone, deleteEntry } =
-    useTrips();
-  const [activeTab, setActiveTab] = useState('Itinerary');
+  const {
+    trips,
+    itinerary,
+    doneDatesByTrip,
+    toggleActivity,
+    toggleDayDone,
+    deleteEntry,
+    updateEntry,
+  } = useTrips();
 
+  const [activeTab, setActiveTab] = useState('Itinerary');
+  const [editingEntry, setEditingEntry] = useState(null); // the entry being edited, or null
+
+    // Ask before deleting, so a stray tap can't wipe out a plan
+  const confirmDelete = (entry, trip) => {
+    Alert.alert(
+      'Delete this plan?',
+      `The ${entry.time} plan at ${entry.location} will be removed from your ${trip.destination} itinerary. This can't be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => deleteEntry(entry.id) },
+      ]
+    );
+  };
+
+  const handleSaveEdit = (entryId, changes) => {
+    updateEntry(entryId, changes);
+    setEditingEntry(null);
+  };
+
+  // Used as the fallback location when the edited location is left empty
+  const editingDestination = trips.find((trip) => trip.id === editingEntry?.tripId)?.destination ?? '';
+  
   if (trips.length === 0) {
     return (
       <View className="flex-1 justify-center bg-white" style={{ paddingHorizontal: SCREEN_PADDING }}>
@@ -71,8 +101,11 @@ export default function ItineraryScreen() {
             trips.map((trip) => {
               const entries = itinerary.filter((entry) => entry.tripId === trip.id);
               const doneDates = doneDatesByTrip[trip.id] ?? [];
-              const totalDays = getTripLength(trip.startDate, trip.endDate);
-              const progress = totalDays > 0 ? doneDates.length / totalDays : 0;
+              // Progress counts the days that have a plan, not every calendar day of the trip
+              const plannedDates = [...new Set(entries.map((entry) => entry.date))];
+              const totalDays = plannedDates.length;
+              const doneDays = plannedDates.filter((date) => doneDates.includes(date)).length;
+              const progress = totalDays > 0 ? doneDays / totalDays : 0;
 
               return (
                 <View key={trip.id} className="mt-8">
@@ -107,7 +140,7 @@ export default function ItineraryScreen() {
                   <View className="mt-3 flex-row justify-between">
                     <AppText className="font-sans-medium text-base">Trip progress</AppText>
                     <AppText className="font-sans-medium text-base">
-                      {doneDates.length}/{totalDays}
+                      {doneDays}/{totalDays}
                     </AppText>
                   </View>
                   <ProgressBar value={progress} className="mt-1 bg-gray-200" />
@@ -128,8 +161,8 @@ export default function ItineraryScreen() {
                         <ItineraryCard
                           entry={entry}
                           onToggleActivity={toggleActivity}
-                          onDelete={() => deleteEntry(entry.id)}
-                          // onEdit: no edit form exists yet. Wire it up when you build one.
+                          onDelete={() => confirmDelete(entry, trip)}
+                          onEdit={() => setEditingEntry(entry)}
                         />
                       </View>
                     ))
@@ -145,6 +178,12 @@ export default function ItineraryScreen() {
           )}
         </View>
       </ScrollView>
+      <EditEntryModal
+        entry={editingEntry}
+        destination={editingDestination}
+        onClose={() => setEditingEntry(null)}
+        onSave={handleSaveEdit}
+      />
     </View>
   );
 }

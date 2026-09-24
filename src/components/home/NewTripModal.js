@@ -17,13 +17,7 @@ import { AppText } from '../common';
 import ChipInput from './ChipInput';
 import FormField, { inputClassName } from './FormField';
 import PickerField from './PickerField';
-
-// Adds the text still sitting in a box (not yet "Added") to the list when saving
-const withPending = (items, text) => {
-  const value = text.trim();
-  const exists = items.some((item) => item.toLowerCase() === value.toLowerCase());
-  return value && !exists ? [...items, value] : items;
-};
+import { withPending } from '../../utils/list';
 
 // Bottom-sheet form for planning a new trip. Where each field ends up:
 //   trips        -> destination, startDate, endDate

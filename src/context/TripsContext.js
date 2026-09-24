@@ -18,7 +18,7 @@ const slugify = (text) =>
     .replace(/^-|-$/g, '');
 
 export function TripsProvider({ children }) {
-  const [trips, setTrips] = useState([]);
+  const [rawTrips, setTrips] = useState([]);
   const [rawPackingLists, setPackingLists] = useState([]);
   const [itinerary, setItinerary] = useState([]);
   const [doneDatesByTrip, setDoneDatesByTrip] = useState({}); // { tripId: ['2026-09-19', ...] }
@@ -37,6 +37,18 @@ export function TripsProvider({ children }) {
           : list
       ),
     [rawPackingLists]
+  );
+
+    // The activity count is always calculated from the itinerary, so Home never shows a stale number
+  const trips = useMemo(
+    () =>
+      rawTrips.map((trip) => ({
+        ...trip,
+        activitiesCount: itinerary
+          .filter((entry) => entry.tripId === trip.id)
+          .reduce((count, entry) => count + entry.activities.length, 0),
+      })),
+    [rawTrips, itinerary]
   );
 
   // The trip the Itinerary screen and Packing screen show
@@ -126,6 +138,29 @@ export function TripsProvider({ children }) {
     setItinerary((current) => current.filter((entry) => entry.id !== entryId));
   }, []);
 
+    // Edits an entry's time, location and activities (changes = { time, location, activities[] }).
+  // An activity whose title is unchanged keeps its done tick; a new title starts not done.
+  const updateEntry = useCallback((entryId, changes) => {
+    const { time, location, activities } = changes;
+    setItinerary((current) =>
+      current.map((entry) => {
+        if (entry.id !== entryId) return entry;
+
+        const nextActivities = activities.map((title) => {
+          const existing = entry.activities.find(
+            (activity) => activity.title.toLowerCase() === title.toLowerCase()
+          );
+          return existing
+            ? { ...existing, title }
+            : { id: uniqueId(`${entry.id}-a`), title, done: false };
+        });
+
+        return { ...entry, time, location, activities: nextActivities };
+      })
+    );
+  }, []);
+
+  
   const togglePacked = useCallback((listId, itemId) => {
     setPackingLists((current) =>
       current.map((list) =>
@@ -224,6 +259,7 @@ export function TripsProvider({ children }) {
       addTrip,
       toggleActivity,
       deleteEntry,
+      updateEntry,
       toggleDayDone,
       togglePacked,
       deletePackingItem,
@@ -240,6 +276,7 @@ export function TripsProvider({ children }) {
       addTrip,
       toggleActivity,
       deleteEntry,
+      updateEntry,
       toggleDayDone,
       togglePacked,
       deletePackingItem,

@@ -18,7 +18,7 @@ const slugify = (text) =>
     .replace(/^-|-$/g, '');
 
 export function TripsProvider({ children }) {
-  const [trips, setTrips] = useState([]);
+  const [rawTrips, setTrips] = useState([]);
   const [rawPackingLists, setPackingLists] = useState([]);
   const [itinerary, setItinerary] = useState([]);
   const [doneDatesByTrip, setDoneDatesByTrip] = useState({}); // { tripId: ['2026-09-19', ...] }
@@ -39,6 +39,18 @@ export function TripsProvider({ children }) {
     [rawPackingLists]
   );
 
+    // The activity count is always calculated from the itinerary, so Home never shows a stale number
+  const trips = useMemo(
+    () =>
+      rawTrips.map((trip) => ({
+        ...trip,
+        activitiesCount: itinerary
+          .filter((entry) => entry.tripId === trip.id)
+          .reduce((count, entry) => count + entry.activities.length, 0),
+      })),
+    [rawTrips, itinerary]
+  );
+  
   // The trip the Itinerary screen and Packing screen show
   const selectedTrip = trips.find((trip) => trip.id === selectedTripId) ?? trips[0] ?? null;
 

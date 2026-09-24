@@ -4,7 +4,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { CalendarDays, Clock } from 'lucide-react-native';
 import colors from '../../constants/colors';
 import { cn } from '../../utils/cn';
-import { formatDateLabel, formatTimeLabel } from '../../utils/date';
+import { formatDateLabel, formatTimeLabel, startOfDay } from '../../utils/date';
 import { AppText } from '../common';
 import { inputClassName } from './FormField';
 
@@ -20,8 +20,16 @@ export default function PickerField({ mode, value, onChange, placeholder, hasErr
   const Icon = ICONS[mode];
   const format = FORMATTERS[mode];
 
+  // The earliest date allowed, at midnight so the same day is still pickable
+  // (the start date may carry a time of day like 3:45 PM, which we don't care about here).
+  const minDate = minimumDate ? startOfDay(minimumDate) : undefined;
+
+  // Anything earlier than the minimum becomes the minimum. Does nothing when there is no minimum.
+  const clampToMin = (date) => (minDate && date < minDate ? minDate : date);
+
   const openPicker = () => {
-    setDraft(value ?? new Date());
+    // Without clamping, an empty end date would open on today, even if the trip starts next month
+    setDraft(clampToMin(value ?? new Date()));
     setOpen(true);
   };
 
@@ -29,7 +37,7 @@ export default function PickerField({ mode, value, onChange, placeholder, hasErr
   // onDismiss fires instead if the user backed out without choosing one.
   const handleValueChangeAndroid = (event, selected) => {
     setOpen(false);
-    onChange(selected);
+    onChange(clampToMin(selected));
   };
   const handleDismissAndroid = () => setOpen(false);
 
@@ -37,7 +45,7 @@ export default function PickerField({ mode, value, onChange, placeholder, hasErr
   const handleValueChangeIOS = (event, selected) => setDraft(selected);
 
   const confirmIOS = () => {
-    onChange(draft);
+    onChange(clampToMin(draft));
     setOpen(false);
   };
 
@@ -59,7 +67,7 @@ export default function PickerField({ mode, value, onChange, placeholder, hasErr
           value={draft}
           mode={mode}
           display="default"
-          minimumDate={minimumDate}
+          minimumDate={minDate}
           onValueChange={handleValueChangeAndroid}
           onDismiss={handleDismissAndroid}
         />
@@ -79,7 +87,7 @@ export default function PickerField({ mode, value, onChange, placeholder, hasErr
                 value={draft}
                 mode={mode}
                 display="spinner"
-                minimumDate={minimumDate}
+                minimumDate={minDate}
                 onValueChange={handleValueChangeIOS}
                 style={{ height: 200 }}
               />

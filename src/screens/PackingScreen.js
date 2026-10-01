@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -7,14 +7,22 @@ import { AppText, EmptyState } from '../components/common';
 import { ItineraryHeader } from '../components/itinerary';
 import { AddItemRow, CategoryBand, ItemGroup } from '../components/packing';
 import { SCREEN_PADDING, TAB_BAR_HEIGHT } from '../constants/layout';
+import TripSelector from '../components/common/TripSelector';
+import { confirmDelete } from '../utils/confirm';
 import { DEFAULT_CATEGORY, useTrips } from '../context/TripsContext';
 
 export default function PackingScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  // All trips now, not just the selected one, so every trip's packing list shows up here.
-  const { trips, packingLists, togglePacked, addPackingItem, deletePackingItem, renamePackingItem } =
-    useTrips();
+  const {
+    trips,
+    selectedTrip,
+    packingLists,
+    togglePacked,
+    addPackingItem,
+    deletePackingItem,
+    renamePackingItem,
+  } = useTrips();
 
   // Keys are prefixed with the trip id so two trips with a category of the same
   // name (e.g. both have "Essentials") don't open/close or edit each other's rows.
@@ -23,19 +31,19 @@ export default function PackingScreen() {
 
   // Ask before deleting, so a stray tap can't remove an item from the list
   const confirmDeleteItem = (trip, list, item) => {
-    Alert.alert(
+    confirmDelete(
       'Delete this item?',
-      `"${item.title}" will be removed from your ${trip.destination} packing list. This can't be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => deletePackingItem(list.id, item.id) },
-      ]
+      `Remove "${item.title}" from your ${trip.destination} packing list?`,
+      () => deletePackingItem(list.id, item.id)
     );
   };
 
   if (trips.length === 0) {
     return (
-      <View className="flex-1 justify-center bg-white" style={{ paddingHorizontal: SCREEN_PADDING }}>
+      <View
+        className="flex-1 justify-center bg-white"
+        style={{ paddingHorizontal: SCREEN_PADDING }}
+      >
         <EmptyState
           title="No trips yet"
           message="Create a trip from Home with + New Trip, then list what you need to pack here."
@@ -62,16 +70,18 @@ export default function PackingScreen() {
       >
         <ItineraryHeader
           title="Packing List"
-          dateLabel={`${trips.length} trip${trips.length > 1 ? 's' : ''}`}
+          dateLabel={selectedTrip?.destination}
           onBackPress={() => navigation.navigate('Home')}
         />
 
         <View style={{ paddingHorizontal: SCREEN_PADDING }}>
-          {trips.map((trip, tripIndex) => {
+          <TripSelector />
+          {[selectedTrip].filter(Boolean).map((trip, tripIndex) => {
             const list = packingLists.find((entry) => entry.tripId === trip.id);
             const items = list?.items ?? [];
             // One band per category. With no items yet we still show the default band so "Add" is reachable.
-            const categories = items.length > 0 ? [...new Set(items.map(categoryOf))] : [DEFAULT_CATEGORY];
+            const categories =
+              items.length > 0 ? [...new Set(items.map(categoryOf))] : [DEFAULT_CATEGORY];
 
             return (
               <View key={trip.id} className={tripIndex === 0 ? 'mt-6' : 'mt-10'}>
@@ -119,7 +129,9 @@ export default function PackingScreen() {
                         packed={false}
                         items={notPacked}
                         mode={modeOf(`${trip.id}:${category}:notPacked`)}
-                        onToggleMode={(mode) => toggleMode(`${trip.id}:${category}:notPacked`, mode)}
+                        onToggleMode={(mode) =>
+                          toggleMode(`${trip.id}:${category}:notPacked`, mode)
+                        }
                         onToggleItem={(item) => togglePacked(list.id, item.id)}
                         onDeleteItem={(item) => confirmDeleteItem(trip, list, item)}
                         onRenameItem={(item, title) => renamePackingItem(list.id, item.id, title)}

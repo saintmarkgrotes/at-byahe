@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,10 +10,8 @@ import {
   NewTripModal,
   PackingListCard,
   TripCarousel,
-  WeatherCard,
 } from '../components/home';
 import { SCREEN_PADDING, TAB_BAR_HEIGHT } from '../constants/layout';
-import { user } from '../constants/user';
 import { useTrips } from '../context/TripsContext';
 import useGreeting from '../hooks/useGreeting';
 import { formatHeaderDate, parseDate } from '../utils/date';
@@ -22,11 +20,13 @@ export default function HomeScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const greeting = useGreeting();
-  const { trips, packingLists, addTrip, selectTrip } = useTrips();
+  const { trips, packingLists, addTrip, selectTrip, profile, now: today } = useTrips();
   const [newTripOpen, setNewTripOpen] = useState(false);
 
-  const today = useMemo(() => new Date(), []);
-  const nextTrip = trips[0];
+  const currentTrips = trips.filter((trip) => trip.status === 'ongoing');
+  const upcomingTrips = trips.filter((trip) => trip.status === 'planned');
+  const pastTrips = trips.filter((trip) => trip.status === 'completed');
+  const nextTrip = currentTrips[0] ?? upcomingTrips[0];
   const tripRange = nextTrip
     ? { start: parseDate(nextTrip.startDate), end: parseDate(nextTrip.endDate) }
     : null;
@@ -49,39 +49,39 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: TAB_BAR_HEIGHT + insets.bottom + 24 }}
       >
         <GreetingHeader
-          name={user.firstName}
+          name={profile.firstName.trim()}
           greeting={greeting}
           dateLabel={formatHeaderDate(today)}
           onNewTripPress={() => setNewTripOpen(true)}
         />
 
-        {/* Upcoming trips */}
-        <View className="mt-8">
-          <SectionHeader
-            title="Upcoming Trips"
-            subtitle={trips.length > 0 ? 'Swipe through your trips' : 'Plan your first trip'}
-            actionLabel={trips.length > 0 ? 'View All' : undefined}
-            className="px-6"
-            onActionPress={() => navigation.navigate('Itinerary')}
-          />
-          {trips.length > 0 ? (
-            <TripCarousel trips={trips} onTripPress={handleTripPress} />
-          ) : (
-            <View style={{ paddingHorizontal: SCREEN_PADDING }}>
-              <EmptyState title="No trips yet" message="Tap + New Trip to plan your first trip." />
+        {[
+          { title: 'Current Trips', data: currentTrips },
+          { title: 'Upcoming Trips', data: upcomingTrips },
+          { title: 'Past Trips', data: [...pastTrips].reverse() },
+        ].map(({ title, data }) =>
+          data.length > 0 ? (
+            <View key={title} className="mt-8">
+              <SectionHeader
+                title={title}
+                subtitle="Tap a trip to view its plans"
+                className="px-6"
+              />
+              <TripCarousel trips={data} onTripPress={handleTripPress} />
             </View>
-          )}
-        </View>
+          ) : null
+        )}
+        {trips.length === 0 ? (
+          <View className="mt-8" style={{ paddingHorizontal: SCREEN_PADDING }}>
+            <EmptyState title="No trips yet" message="Tap + New Trip to plan your first trip." />
+          </View>
+        ) : null}
 
-        {/* Calendar + weather */}
+        {/* Calendar */}
         <View className="mt-4 flex-row gap-3" style={{ paddingHorizontal: SCREEN_PADDING }}>
           <View className="flex-1">
             <SectionHeader size="sm" title="Calendar" />
             <CalendarCard today={today} tripRange={tripRange} />
-          </View>
-          <View className="w-[120px]">
-            <SectionHeader size="sm" title="Today" />
-            <WeatherCard />
           </View>
         </View>
 

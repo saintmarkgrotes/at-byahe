@@ -42,7 +42,18 @@ export const getWeekDays = (date) => {
   });
 };
 
-const NUMBER_WORDS = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
+const NUMBER_WORDS = [
+  'One',
+  'Two',
+  'Three',
+  'Four',
+  'Five',
+  'Six',
+  'Seven',
+  'Eight',
+  'Nine',
+  'Ten',
+];
 
 /** ('2026-09-19', '2026-09-23') -> 'Sep 19 – Sep 23, 2026' */
 export const formatLongRange = (startIso, endIso) => {
@@ -88,7 +99,7 @@ export const formatTimeLabel = (date) => {
 /** '8:30 AM' -> Date (today at 8:30). Returns null if the text isn't in that format. */
 export const parseTimeLabel = (label) => {
   const match = /^(\d{1,2}):(\d{2}) (AM|PM)$/.exec(label ?? '');
-  if (!match) return null;
+  if (!match || Number(match[1]) < 1 || Number(match[1]) > 12 || Number(match[2]) > 59) return null;
   const hours = (Number(match[1]) % 12) + (match[3] === 'PM' ? 12 : 0);
   const date = new Date();
   date.setHours(hours, Number(match[2]), 0, 0);

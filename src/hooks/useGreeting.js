@@ -1,10 +1,6 @@
-import { useMemo } from 'react';
-
+import { useTrips } from '../context/TripsContext';
 export default function useGreeting() {
-  return useMemo(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good Morning!';
-    if (hour < 18) return 'Good Afternoon!';
-    return 'Good Evening!';
-  }, []);
+  const { now } = useTrips();
+  const hour = now.getHours();
+  return hour < 12 ? 'Good Morning!' : hour < 18 ? 'Good Afternoon!' : 'Good Evening!';
 }

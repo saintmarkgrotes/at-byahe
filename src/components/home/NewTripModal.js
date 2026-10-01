@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X } from 'lucide-react-native';
 import colors from '../../constants/colors';
 import { SCREEN_PADDING } from '../../constants/layout';
-import { toIsoDate, formatTimeLabel } from '../../utils/date';
+import { toIsoDate, formatTimeLabel, parseDate } from '../../utils/date';
 import { AppText } from '../common';
 import ChipInput from './ChipInput';
 import FormField, { inputClassName } from './FormField';
@@ -23,13 +23,18 @@ import { withPending } from '../../utils/list';
 //   trips        -> destination, startDate, endDate
 //   itinerary    -> location, time, activities
 //   packingLists -> things to bring
-export default function NewTripModal({ visible, onClose, onSubmit }) {
+export default function NewTripModal(props) {
+  if (!props.visible) return null;
+  return <TripForm key={props.trip?.id ?? 'new'} {...props} />;
+}
+
+function TripForm({ visible, onClose, onSubmit, trip = null }) {
   const insets = useSafeAreaInsets();
 
-  const [destination, setDestination] = useState('');
+  const [destination, setDestination] = useState(trip?.destination ?? '');
   const [location, setLocation] = useState('');
-  const [startDate, setStartDate] = useState(null); // Date | null
-  const [endDate, setEndDate] = useState(null); // Date | null
+  const [startDate, setStartDate] = useState(() => (trip ? parseDate(trip.startDate) : null)); // Date | null
+  const [endDate, setEndDate] = useState(() => (trip ? parseDate(trip.endDate) : null)); // Date | null
   const [packingItems, setPackingItems] = useState([]);
   const [packingText, setPackingText] = useState('');
   const [activities, setActivities] = useState([]);
@@ -73,16 +78,20 @@ export default function NewTripModal({ visible, onClose, onSubmit }) {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    onSubmit({
-      destination: destination.trim(),
-      location: location.trim(),
-      startDate: toIsoDate(startDate),
-      endDate: toIsoDate(endDate),
-      packingItems: finalPacking,
-      activities: finalActivities,
-      activityTime: activityTime ? formatTimeLabel(activityTime) : '',
-    });
-    resetForm();
+    try {
+      onSubmit({
+        destination: destination.trim(),
+        location: location.trim(),
+        startDate: toIsoDate(startDate),
+        endDate: toIsoDate(endDate),
+        packingItems: finalPacking,
+        activities: finalActivities,
+        activityTime: activityTime ? formatTimeLabel(activityTime) : '',
+      });
+      resetForm();
+    } catch (error) {
+      setErrors({ submit: error.message });
+    }
   };
 
   return (
@@ -110,8 +119,10 @@ export default function NewTripModal({ visible, onClose, onSubmit }) {
             style={{ paddingHorizontal: SCREEN_PADDING }}
           >
             <View>
-              <AppText variant="heading">New Trip</AppText>
-              <AppText variant="muted">Plan your next trip</AppText>
+              <AppText variant="heading">{trip ? 'Edit Trip' : 'New Trip'}</AppText>
+              <AppText variant="muted">
+                {trip ? 'Update your destination and dates' : 'Plan your next trip'}
+              </AppText>
             </View>
             <Pressable
               onPress={handleClose}
@@ -139,15 +150,20 @@ export default function NewTripModal({ visible, onClose, onSubmit }) {
               />
             </FormField>
 
-            <FormField label="Location (optional)" hint="Shown on your itinerary. Defaults to the destination.">
-              <TextInput
-                value={location}
-                onChangeText={setLocation}
-                placeholder="Address or area"
-                placeholderTextColor={colors.inactive}
-                className={inputClassName(false)}
-              />
-            </FormField>
+            {!trip && (
+              <FormField
+                label="Location (optional)"
+                hint="Shown on your itinerary. Defaults to the destination."
+              >
+                <TextInput
+                  value={location}
+                  onChangeText={setLocation}
+                  placeholder="Address or area"
+                  placeholderTextColor={colors.inactive}
+                  className={inputClassName(false)}
+                />
+              </FormField>
+            )}
 
             <View className="flex-row gap-3">
               <FormField label="Start date" error={errors.startDate} className="flex-1">
@@ -157,7 +173,7 @@ export default function NewTripModal({ visible, onClose, onSubmit }) {
                   onChange={(date) => {
                     setStartDate(date);
                     // Keep the end date valid if it was set before an even later start date
-                    if (endDate && toIsoDate(endDate) < toIsoDate(date)) setEndDate(null);
+                    if (date && endDate && toIsoDate(endDate) < toIsoDate(date)) setEndDate(null);
                   }}
                   placeholder="Select date"
                   hasError={!!errors.startDate}
@@ -175,35 +191,48 @@ export default function NewTripModal({ visible, onClose, onSubmit }) {
               </FormField>
             </View>
 
-            <FormField label="Things to bring" hint="Becomes this trip's packing list.">
-              <ChipInput
-                items={packingItems}
-                onChange={setPackingItems}
-                text={packingText}
-                onChangeText={setPackingText}
-                placeholder="Add something to bring"
-              />
-            </FormField>
+            {!trip && (
+              <>
+                <FormField label="Things to bring" hint="Becomes this trip's packing list.">
+                  <ChipInput
+                    items={packingItems}
+                    onChange={setPackingItems}
+                    text={packingText}
+                    onChangeText={setPackingText}
+                    placeholder="Add something to bring"
+                  />
+                </FormField>
 
-            <FormField label="Activities" hint="Added to Day One of your itinerary.">
-              <ChipInput
-                items={activities}
-                onChange={setActivities}
-                text={activityText}
-                onChangeText={setActivityText}
-                placeholder="Add an activity"
-              />
-            </FormField>
+                <FormField label="Activities" hint="Added to Day One of your itinerary.">
+                  <ChipInput
+                    items={activities}
+                    onChange={setActivities}
+                    text={activityText}
+                    onChangeText={setActivityText}
+                    placeholder="Add an activity"
+                  />
+                </FormField>
 
-            <FormField label="Start time" error={errors.activityTime} hint="Needed if you add activities.">
-              <PickerField
-                mode="time"
-                value={activityTime}
-                onChange={setActivityTime}
-                placeholder="Select time"
-                hasError={!!errors.activityTime}
-              />
-            </FormField>
+                <FormField
+                  label="Start time"
+                  error={errors.activityTime}
+                  hint="Needed if you add activities."
+                >
+                  <PickerField
+                    mode="time"
+                    value={activityTime}
+                    onChange={setActivityTime}
+                    placeholder="Select time"
+                    hasError={!!errors.activityTime}
+                  />
+                </FormField>
+              </>
+            )}
+            {errors.submit ? (
+              <AppText accessibilityRole="alert" className="mt-4 text-red-600">
+                {errors.submit}
+              </AppText>
+            ) : null}
           </ScrollView>
 
           {/* Buttons stay visible while the form scrolls */}

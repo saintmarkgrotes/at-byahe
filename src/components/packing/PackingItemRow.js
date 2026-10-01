@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/static-components -- getPackingIcon selects existing imported icons; it does not create components. */
 import { Pressable, TextInput, View } from 'react-native';
 import { Check, Trash2 } from 'lucide-react-native';
 import colors from '../../constants/colors';
@@ -7,7 +8,14 @@ import { AppText } from '../common';
 
 // One item: checkbox, icon and name. Tap the row to pack / unpack it.
 // In edit mode the name becomes a text box; in delete mode a trash button appears.
-export default function PackingItemRow({ item, showDelete, editMode, onToggle, onDelete, onRename }) {
+export default function PackingItemRow({
+  item,
+  showDelete,
+  editMode,
+  onToggle,
+  onDelete,
+  onRename,
+}) {
   const Icon = getPackingIcon(item.title);
   const nameStyle = item.packed ? 'font-sans-bold text-brand-700' : 'font-sans-medium text-muted';
 
@@ -33,7 +41,11 @@ export default function PackingItemRow({ item, showDelete, editMode, onToggle, o
         )}
 
         <View className="mx-4 w-8 items-center">
-          <Icon size={26} color={item.packed ? colors.brand[600] : colors.inactive} strokeWidth={1.5} />
+          <Icon
+            size={26}
+            color={item.packed ? colors.brand[600] : colors.inactive}
+            strokeWidth={1.5}
+          />
         </View>
 
         {editMode ? (

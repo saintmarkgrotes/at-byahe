@@ -14,7 +14,15 @@ const FORMATTERS = { date: formatDateLabel, time: formatTimeLabel };
 // A tappable field that opens the native date or time picker, so nothing is typed by hand.
 // Android opens the system dialog and reports its result immediately. iOS has no built-in
 // dialog, so this shows the spinner in a small bottom sheet with a Done button.
-export default function PickerField({ mode, value, onChange, placeholder, hasError, minimumDate }) {
+export default function PickerField({
+  mode,
+  value,
+  onChange,
+  placeholder,
+  hasError,
+  minimumDate,
+  maximumDate,
+}) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(value ?? new Date());
   const Icon = ICONS[mode];
@@ -25,7 +33,11 @@ export default function PickerField({ mode, value, onChange, placeholder, hasErr
   const minDate = minimumDate ? startOfDay(minimumDate) : undefined;
 
   // Anything earlier than the minimum becomes the minimum. Does nothing when there is no minimum.
-  const clampToMin = (date) => (minDate && date < minDate ? minDate : date);
+  const maxDate = maximumDate ? startOfDay(maximumDate) : undefined;
+  const clampToMin = (date) => {
+    const day = mode === 'date' ? startOfDay(date) : date;
+    return minDate && day < minDate ? minDate : maxDate && day > maxDate ? maxDate : day;
+  };
 
   const openPicker = () => {
     // Without clamping, an empty end date would open on today, even if the trip starts next month
@@ -37,12 +49,12 @@ export default function PickerField({ mode, value, onChange, placeholder, hasErr
   // onDismiss fires instead if the user backed out without choosing one.
   const handleValueChangeAndroid = (event, selected) => {
     setOpen(false);
-    onChange(clampToMin(selected));
+    if (selected) onChange(clampToMin(selected));
   };
   const handleDismissAndroid = () => setOpen(false);
 
   // iOS: the spinner fires onValueChange continuously as it's scrolled; only "Done" commits it.
-  const handleValueChangeIOS = (event, selected) => setDraft(selected);
+  const handleValueChangeIOS = (event, selected) => selected && setDraft(clampToMin(selected));
 
   const confirmIOS = () => {
     onChange(clampToMin(draft));
@@ -68,13 +80,19 @@ export default function PickerField({ mode, value, onChange, placeholder, hasErr
           mode={mode}
           display="default"
           minimumDate={minDate}
+          maximumDate={maxDate}
           onValueChange={handleValueChangeAndroid}
           onDismiss={handleDismissAndroid}
         />
       ) : null}
 
       {Platform.OS === 'ios' ? (
-        <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
+        <Modal
+          visible={open}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setOpen(false)}
+        >
           <Pressable className="flex-1 justify-end bg-black/40" onPress={() => setOpen(false)}>
             {/* Stop the tap-to-close from firing when the sheet itself is tapped */}
             <Pressable className="rounded-t-[24px] bg-white pb-6" onPress={() => {}}>
@@ -88,6 +106,7 @@ export default function PickerField({ mode, value, onChange, placeholder, hasErr
                 mode={mode}
                 display="spinner"
                 minimumDate={minDate}
+                maximumDate={maxDate}
                 onValueChange={handleValueChangeIOS}
                 style={{ height: 200 }}
               />

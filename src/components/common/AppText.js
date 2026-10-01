@@ -1,3 +1,4 @@
+import { isLoaded } from 'expo-font';
 import { Text } from 'react-native';
 import { cn } from '../../utils/cn';
 
@@ -12,8 +13,12 @@ const VARIANTS = {
 };
 
 export default function AppText({ variant = 'body', className, children, ...props }) {
+  const classes = cn(VARIANTS[variant], className);
+  const fontClasses = isLoaded('PlusJakartaSans_400Regular')
+    ? classes
+    : classes.replace(/\bfont-sans(?:-[a-z]+)?\b/g, '');
   return (
-    <Text className={cn(VARIANTS[variant], className)} {...props}>
+    <Text className={fontClasses} {...props}>
       {children}
     </Text>
   );

@@ -1,295 +1,195 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
-
-// Shared app data. Everything starts empty and is filled in by the user, so a screen can
-// add a trip and every other screen sees it.
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { changeState, emptyState, selectedTripOf, tripStatus, uniqueId } from '../state/trips';
+import { createTripStorage } from '../state/storage';
+import { toIsoDate } from '../utils/date';
+import useNow from '../hooks/useNow';
+export { DEFAULT_CATEGORY } from '../state/trips';
 const TripsContext = createContext(null);
 
-// Packing items without a category go under this heading
-export const DEFAULT_CATEGORY = 'Essentials';
-
-// Unique id, even if two things are created in the same millisecond
-const uniqueId = (prefix) => `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
-
-const slugify = (text) =>
-  text
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-
 export function TripsProvider({ children }) {
-  const [rawTrips, setTrips] = useState([]);
-  const [rawPackingLists, setPackingLists] = useState([]);
-  const [itinerary, setItinerary] = useState([]);
-  const [doneDatesByTrip, setDoneDatesByTrip] = useState({}); // { tripId: ['2026-09-19', ...] }
-  const [selectedTripId, setSelectedTripId] = useState(null);
+  const [state, setState] = useState(emptyState);
+  const stateRef = useRef(state);
+  const [storage] = useState(() => createTripStorage(AsyncStorage));
+  const [ready, setReady] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [saveError, setSaveError] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const revision = useRef(0);
+  const insets = useSafeAreaInsets();
+  const now = useNow();
+  const today = toIsoDate(now);
 
-  // Packed / total are always calculated from the items, so Home and Packing never disagree
-  const packingLists = useMemo(
-    () =>
-      rawPackingLists.map((list) =>
-        list.items
-          ? {
-              ...list,
-              packed: list.items.filter((item) => item.packed).length,
-              total: list.items.length,
-            }
-          : list
-      ),
-    [rawPackingLists]
+  const load = useCallback(() => {
+    return storage
+      .load()
+      .then((saved) => {
+        stateRef.current = saved;
+        setState(saved);
+        setReady(true);
+      })
+      .catch((error) => {
+        setLoadError(error.message || 'Could not read saved trips.');
+      });
+  }, [storage]);
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const persist = useCallback(
+    (snapshot) => {
+      const currentRevision = ++revision.current;
+      setSaving(true);
+      storage
+        .save(snapshot)
+        .then(() => {
+          if (revision.current === currentRevision) {
+            setSaving(false);
+            setSaveError(false);
+          }
+        })
+        .catch(() => {
+          if (revision.current === currentRevision) {
+            setSaving(false);
+            setSaveError(true);
+          }
+        });
+    },
+    [storage]
   );
-
-    // The activity count is always calculated from the itinerary, so Home never shows a stale number
+  const commit = useCallback(
+    (action) => {
+      if (!ready) throw new Error('Please wait for your saved trips to load.');
+      const next = changeState(stateRef.current, action);
+      if (next === stateRef.current) return;
+      stateRef.current = next;
+      setState(next);
+      persist(next);
+    },
+    [ready, persist]
+  );
+  const actions = useMemo(
+    () => ({
+      selectTrip: (id) => commit({ type: 'select', id }),
+      addTrip: (form) => {
+        const id = uniqueId();
+        commit({ type: 'addTrip', id, form });
+        return id;
+      },
+      updateTrip: (id, form) => commit({ type: 'updateTrip', id, form }),
+      deleteTrip: (id) => commit({ type: 'deleteTrip', id }),
+      addEntry: (tripId, form) => commit({ type: 'addEntry', id: uniqueId(), tripId, form }),
+      updateEntry: (id, form) =>
+        commit({ type: 'updateEntry', id, form, activitySeed: uniqueId() }),
+      deleteEntry: (id) => commit({ type: 'deleteEntry', id }),
+      toggleActivity: (id, activityId) => commit({ type: 'toggleActivity', id, activityId }),
+      toggleDayDone: (id, date) => commit({ type: 'toggleDay', id, date }),
+      addPackingItem: (tripId, title, category) =>
+        commit({ type: 'addPacking', id: uniqueId(), tripId, title, category }),
+      togglePacked: (id, itemId) => commit({ type: 'togglePacked', id, itemId }),
+      deletePackingItem: (id, itemId) => commit({ type: 'deletePacking', id, itemId }),
+      renamePackingItem: (id, itemId, title) =>
+        commit({ type: 'renamePacking', id, itemId, title }),
+      updateNotes: (id, notes) => commit({ type: 'notes', id, notes }),
+      updateProfile: (firstName) => commit({ type: 'profile', firstName }),
+    }),
+    [commit]
+  );
   const trips = useMemo(
     () =>
-      rawTrips.map((trip) => ({
+      state.trips.map((trip) => ({
         ...trip,
-        activitiesCount: itinerary
-          .filter((entry) => entry.tripId === trip.id)
-          .reduce((count, entry) => count + entry.activities.length, 0),
+        status: tripStatus(trip, today),
+        activitiesCount: state.itinerary
+          .filter((e) => e.tripId === trip.id)
+          .reduce((n, e) => n + e.activities.length, 0),
       })),
-    [rawTrips, itinerary]
+    [state.trips, state.itinerary, today]
   );
-
-  // The trip the Itinerary screen and Packing screen show
-  const selectedTrip = trips.find((trip) => trip.id === selectedTripId) ?? trips[0] ?? null;
-
-  const selectTrip = useCallback((tripId) => setSelectedTripId(tripId), []);
-
-  // form = { destination, location, startDate, endDate, packingItems[], activities[], activityTime }
-  const addTrip = useCallback((form) => {
-    const { destination, location, startDate, endDate, packingItems, activities, activityTime } = form;
-    const id = uniqueId(slugify(destination) || 'trip');
-
-    // A trip
-    const trip = {
-      id,
-      destination,
-      startDate,
-      endDate,
-      status: 'planned',
-      activitiesCount: activities.length,
-      image: null,
-    };
-    // Keep trips ordered by start date ('2026-09-19' strings sort correctly)
-    setTrips((current) => [...current, trip].sort((a, b) => a.startDate.localeCompare(b.startDate)));
-
-    // A packing list: the things to bring, all unpacked to start with
-    if (packingItems.length > 0) {
-      setPackingLists((current) => [
-        ...current,
-        {
-          id: `${id}-packing`,
-          tripId: id,
-          title: destination,
-          startDate,
-          endDate,
-          packed: 0,
-          total: packingItems.length,
-          items: packingItems.map((title, index) => ({
-            id: `${id}-p${index + 1}`,
-            title,
-            packed: false,
-            category: DEFAULT_CATEGORY,
-          })),
-        },
-      ]);
-    }
-
-    // Itinerary: one block on the first day
-    if (activities.length > 0) {
-      setItinerary((current) => [
-        ...current,
-        {
-          id: `${id}-day1`,
-          tripId: id,
-          date: startDate,
-          time: activityTime,
-          location: location || destination,
-          activities: activities.map((title, index) => ({
-            id: `${id}-a${index + 1}`,
-            title,
-            done: false,
-          })),
-        },
-      ]);
-    }
-
-    setSelectedTripId(id);
-    return id;
-  }, []);
-
-  const toggleActivity = useCallback((entryId, activityId) => {
-    setItinerary((current) =>
-      current.map((entry) =>
-        entry.id !== entryId
-          ? entry
-          : {
-              ...entry,
-              activities: entry.activities.map((activity) =>
-                activity.id === activityId ? { ...activity, done: !activity.done } : activity
-              ),
-            }
-      )
-    );
-  }, []);
-
-  const deleteEntry = useCallback((entryId) => {
-    setItinerary((current) => current.filter((entry) => entry.id !== entryId));
-  }, []);
-
-    // Edits an entry's time, location and activities (changes = { time, location, activities[] }).
-  // An activity whose title is unchanged keeps its done tick; a new title starts not done.
-  const updateEntry = useCallback((entryId, changes) => {
-    const { time, location, activities } = changes;
-    setItinerary((current) =>
-      current.map((entry) => {
-        if (entry.id !== entryId) return entry;
-
-        const nextActivities = activities.map((title) => {
-          const existing = entry.activities.find(
-            (activity) => activity.title.toLowerCase() === title.toLowerCase()
-          );
-          return existing
-            ? { ...existing, title }
-            : { id: uniqueId(`${entry.id}-a`), title, done: false };
-        });
-
-        return { ...entry, time, location, activities: nextActivities };
-      })
-    );
-  }, []);
-
-  
-  const togglePacked = useCallback((listId, itemId) => {
-    setPackingLists((current) =>
-      current.map((list) =>
-        list.id !== listId
-          ? list
-          : {
-              ...list,
-              items: list.items.map((item) =>
-                item.id === itemId ? { ...item, packed: !item.packed } : item
-              ),
-            }
-      )
-    );
-  }, []);
-
-  const deletePackingItem = useCallback((listId, itemId) => {
-    setPackingLists((current) =>
-      current.map((list) =>
-        list.id !== listId
-          ? list
-          : { ...list, items: list.items.filter((item) => item.id !== itemId) }
-      )
-    );
-  }, []);
-
-  // Renames an item. An empty name is ignored so an item can never end up blank.
-  const renamePackingItem = useCallback((listId, itemId, title) => {
-    const name = title.trim();
-    if (!name) return;
-    setPackingLists((current) =>
-      current.map((list) =>
-        list.id !== listId
-          ? list
-          : {
-              ...list,
-              items: list.items.map((item) => (item.id === itemId ? { ...item, title: name } : item)),
-            }
-      )
-    );
-  }, []);
-
-  // Adds an unpacked item. If the trip has no packing list yet, one is created for it.
-  const addPackingItem = useCallback(
-    (tripId, title, category = DEFAULT_CATEGORY) => {
-      const trip = trips.find((entry) => entry.id === tripId);
-      const item = {
-        id: uniqueId(`${tripId}-p`),
-        title,
-        packed: false,
-        category,
-      };
-
-      setPackingLists((current) => {
-        if (current.some((list) => list.tripId === tripId)) {
-          return current.map((list) =>
-            list.tripId !== tripId ? list : { ...list, items: [...(list.items ?? []), item] }
-          );
-        }
-        if (!trip) return current;
-        return [
-          ...current,
-          {
-            id: `${tripId}-packing`,
-            tripId,
-            title: trip.destination,
-            startDate: trip.startDate,
-            endDate: trip.endDate,
-            packed: 0,
-            total: 0,
-            items: [item],
-          },
-        ];
-      });
-    },
-    [trips]
+  const packingLists = useMemo(
+    () =>
+      state.packingLists.map((list) => {
+        const trip = state.trips.find((t) => t.id === list.tripId);
+        return {
+          ...list,
+          title: trip.destination,
+          startDate: trip.startDate,
+          endDate: trip.endDate,
+          packed: list.items.filter((i) => i.packed).length,
+          total: list.items.length,
+        };
+      }),
+    [state.packingLists, state.trips]
   );
-
-  const toggleDayDone = useCallback((tripId, date) => {
-    setDoneDatesByTrip((current) => {
-      const dates = current[tripId] ?? [];
-      return {
-        ...current,
-        [tripId]: dates.includes(date) ? dates.filter((d) => d !== date) : [...dates, date],
-      };
-    });
-  }, []);
-
-  const value = useMemo(
-    () => ({
-      trips,
-      packingLists,
-      itinerary,
-      doneDatesByTrip,
-      selectedTrip,
-      selectTrip,
-      addTrip,
-      toggleActivity,
-      deleteEntry,
-      updateEntry,
-      toggleDayDone,
-      togglePacked,
-      deletePackingItem,
-      renamePackingItem,
-      addPackingItem,
-    }),
-    [
-      trips,
-      packingLists,
-      itinerary,
-      doneDatesByTrip,
-      selectedTrip,
-      selectTrip,
-      addTrip,
-      toggleActivity,
-      deleteEntry,
-      updateEntry,
-      toggleDayDone,
-      togglePacked,
-      deletePackingItem,
-      renamePackingItem,
-      addPackingItem,
-    ]
+  const selectedTrip = selectedTripOf({ ...state, trips });
+  const value = { ...state, ...actions, trips, packingLists, selectedTrip, now, saving, saveError };
+  if (!ready)
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', padding: 24, backgroundColor: 'white' }}>
+        {loadError ? (
+          <>
+            <Text accessibilityRole="alert">
+              Your saved trips could not be opened. They have not been overwritten. {loadError}
+            </Text>
+            <Pressable
+              onPress={() => {
+                setLoadError('');
+                load();
+              }}
+              accessibilityRole="button"
+              style={{ padding: 16 }}
+            >
+              <Text>Retry loading</Text>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <ActivityIndicator />
+            <Text style={{ textAlign: 'center', marginTop: 12 }}>Loading your trips...</Text>
+          </>
+        )}
+      </View>
+    );
+  return (
+    <TripsContext.Provider value={value}>
+      <View style={{ flex: 1 }}>
+        {saveError ? (
+          <View
+            style={{
+              paddingTop: insets.top + 8,
+              paddingHorizontal: 20,
+              backgroundColor: '#FFF0DC',
+            }}
+          >
+            <Text accessibilityRole="alert">
+              Changes could not be saved on this device. Keep the app open and retry.
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => persist(stateRef.current)}
+              style={{ paddingVertical: 12 }}
+            >
+              <Text>Retry saving</Text>
+            </Pressable>
+          </View>
+        ) : null}
+        {children}
+      </View>
+    </TripsContext.Provider>
   );
-
-  return <TripsContext.Provider value={value}>{children}</TripsContext.Provider>;
 }
-
 export function useTrips() {
   const context = useContext(TripsContext);
-  if (!context) throw new Error('useTrips must be used inside <TripsProvider>');
+  if (!context) throw new Error('useTrips must be used inside TripsProvider');
   return context;
 }

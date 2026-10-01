@@ -1,4 +1,6 @@
 import './global.css';
+import { useEffect } from 'react';
+import * as SplashScreen from 'expo-splash-screen';
 
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -14,8 +16,10 @@ import {
 import AppNavigator from './src/navigation/AppNavigator';
 import { TripsProvider } from './src/context/TripsContext';
 
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
 export default function App() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     PlusJakartaSans_400Regular,
     PlusJakartaSans_500Medium,
     PlusJakartaSans_600SemiBold,
@@ -23,7 +27,11 @@ export default function App() {
     PlusJakartaSans_800ExtraBold,
   });
 
-  if (!fontsLoaded) return null;
+  useEffect(() => {
+    if (fontsLoaded || fontError) SplashScreen.hideAsync().catch(() => {});
+  }, [fontsLoaded, fontError]);
+
+  if (!fontsLoaded && !fontError) return null;
 
   return (
     <SafeAreaProvider>

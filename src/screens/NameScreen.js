@@ -81,13 +81,13 @@ export default function NameScreen({ onContinue }) {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
+          style={styles.scroll}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           contentContainerStyle={[
             styles.content,
             {
               paddingTop: insets.top + 24,
-              paddingBottom: Math.max(insets.bottom, 8),
               paddingLeft: insets.left + 8,
               paddingRight: insets.right + 8,
             },
@@ -140,6 +140,19 @@ export default function NameScreen({ onContinue }) {
               <AppText accessibilityRole="alert" style={styles.error}>{error}</AppText>
             ) : null}
             <AppText style={styles.hint}>You can change this later</AppText>
+          </View>
+        </ScrollView>
+        <View
+          style={[
+            styles.footer,
+            {
+              paddingBottom: Math.max(insets.bottom, 16),
+              paddingLeft: insets.left + 8,
+              paddingRight: insets.right + 8,
+            },
+          ]}
+        >
+          <View style={styles.footerCard}>
             <Pressable
               cssInterop={false}
               accessibilityRole="button"
@@ -150,7 +163,7 @@ export default function NameScreen({ onContinue }) {
               <AppText className="font-sans-semibold" style={styles.buttonLabel}>Continue</AppText>
             </Pressable>
           </View>
-        </ScrollView>
+        </View>
       </KeyboardAvoidingView>
     </View>
   );
@@ -159,6 +172,7 @@ export default function NameScreen({ onContinue }) {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#FAFCFA' },
   keyboardContainer: { flex: 1 },
+  scroll: { flex: 1 },
   content: { flexGrow: 1, alignItems: 'center' },
   brand: {
     flex: 1,
@@ -175,8 +189,9 @@ const styles = StyleSheet.create({
     maxWidth: 480,
     paddingHorizontal: 28,
     paddingTop: 30,
-    paddingBottom: 48,
-    borderRadius: 48,
+    paddingBottom: 8,
+    borderTopLeftRadius: 48,
+    borderTopRightRadius: 48,
     backgroundColor: '#FFFFFF',
     shadowColor: '#143C2E',
     shadowOffset: { width: 0, height: 1 },
@@ -201,6 +216,17 @@ const styles = StyleSheet.create({
   inputError: { borderColor: '#BD4037' },
   error: { color: '#BD4037', fontSize: 12, marginTop: 8 },
   hint: { fontSize: 12, color: '#555B57', textAlign: 'center', marginTop: 16, marginBottom: 16 },
+  footer: { flexShrink: 0, alignItems: 'center', backgroundColor: '#FAFCFA' },
+  footerCard: {
+    width: '100%',
+    maxWidth: 480,
+    paddingHorizontal: 28,
+    paddingTop: 12,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 48,
+    borderBottomRightRadius: 48,
+    backgroundColor: '#FFFFFF',
+  },
   button: {
     minHeight: 64,
     borderRadius: 22,

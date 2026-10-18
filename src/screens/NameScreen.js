@@ -141,6 +141,7 @@ export default function NameScreen({ onContinue }) {
             ) : null}
             <AppText style={styles.hint}>You can change this later</AppText>
             <Pressable
+              cssInterop={false}
               accessibilityRole="button"
               accessibilityHint="Saves your name and opens your travel planner"
               onPress={handleContinue}

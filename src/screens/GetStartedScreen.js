@@ -73,7 +73,7 @@ export default function GetStartedScreen({ onGetStarted }) {
           </AppText>
           <Pressable
             accessibilityRole="button"
-            accessibilityHint="Opens your travel planner"
+            accessibilityHint="Enter your name to personalize your travel planner"
             onPress={onGetStarted}
             style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
           >

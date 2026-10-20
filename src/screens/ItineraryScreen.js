@@ -9,6 +9,7 @@ import {
   EditEntryModal,
   ItineraryCard,
   ItineraryHeader,
+  ItineraryMap,
   SegmentTabs,
 } from '../components/itinerary';
 import NewTripModal from '../components/home/NewTripModal';
@@ -16,7 +17,7 @@ import { SCREEN_PADDING, TAB_BAR_HEIGHT } from '../constants/layout';
 import { useTrips } from '../context/TripsContext';
 import { formatFullDate, formatLongRange, getDayLabel } from '../utils/date';
 import { confirmDelete } from '../utils/confirm';
-const TABS = ['Itinerary', 'Notes'];
+const TABS = ['Itinerary', 'Map', 'Notes'];
 const STATUS_LABELS = { planned: 'Planned', ongoing: 'Ongoing', completed: 'Completed' };
 
 export default function ItineraryScreen() {
@@ -96,7 +97,9 @@ function TripItinerary() {
             />
           </View>
           <SegmentTabs tabs={TABS} active={activeTab} onChange={setActiveTab} />
-          {activeTab === 'Notes' ? (
+          {activeTab === 'Map' ? (
+            <ItineraryMap trip={trip} entries={entries} />
+          ) : activeTab === 'Notes' ? (
             <View className="mt-5">
               <AppText variant="subheading">Trip notes</AppText>
               <TextInput

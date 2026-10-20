@@ -21,6 +21,7 @@ export default function Pill({
   tone = 'neutral',
   onPress,
   className,
+  accessibilityState,
 }) {
   const s = SIZES[size];
   const t = TONES[tone];
@@ -30,6 +31,7 @@ export default function Pill({
     <Wrapper
       onPress={onPress}
       accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityState={accessibilityState}
       className={cn(
         'flex-row items-center self-start rounded-full bg-white shadow-md shadow-black/10',
         s.box,

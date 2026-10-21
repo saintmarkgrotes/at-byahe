@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pencil, Trash2 } from 'lucide-react-native';
 import { AppText, EmptyState, Pill, ProgressBar } from '../components/common';
 import TripSelector from '../components/common/TripSelector';
 import {
@@ -84,9 +85,16 @@ function TripItinerary() {
           </AppText>
           <View className="my-4 flex-row flex-wrap gap-3">
             <Pill label={STATUS_LABELS[trip.status]} tone="brand" />
-            <Pill label="Edit trip" onPress={() => setEditingTrip(true)} />
+            <Pill
+              label="Edit trip"
+              icon={Pencil}
+              tone="edit"
+              onPress={() => setEditingTrip(true)}
+            />
             <Pill
               label="Delete trip"
+              icon={Trash2}
+              tone="danger"
               onPress={() =>
                 confirmDelete(
                   'Delete this trip?',

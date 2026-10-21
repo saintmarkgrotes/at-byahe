@@ -1,5 +1,5 @@
 import { Pressable, View } from 'react-native';
-import { MapPin, TextCursorInput, Trash2 } from 'lucide-react-native';
+import { MapPin, Pencil, Trash2 } from 'lucide-react-native';
 import colors from '../../constants/colors';
 import { cn } from '../../utils/cn';
 import { AppText, Card } from '../common';
@@ -60,19 +60,19 @@ export default function ItineraryCard({ entry, onToggleActivity, onDelete, onEdi
         <Pressable
           onPress={onDelete}
           accessibilityRole="button"
-          className="flex-row items-center gap-1.5 rounded-full bg-red-50 px-4 py-2"
+          className="flex-row items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-4 py-2 active:bg-red-100"
         >
-          <Trash2 size={16} color="#F87171" strokeWidth={1.75} />
-          <AppText className="font-sans-medium text-sm text-red-400">Delete</AppText>
+          <Trash2 size={16} color="#B91C1C" strokeWidth={1.75} />
+          <AppText className="font-sans-medium text-sm text-red-700">Delete</AppText>
         </Pressable>
 
         <Pressable
           onPress={onEdit}
           accessibilityRole="button"
-          className="flex-row items-center gap-1.5 rounded-full bg-blue-50 px-4 py-2"
+          className="flex-row items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 active:bg-blue-100"
         >
-          <TextCursorInput size={16} color="#3B82F6" strokeWidth={1.75} />
-          <AppText className="font-sans-medium text-sm text-blue-500">Edit</AppText>
+          <Pencil size={16} color="#1D4ED8" strokeWidth={1.75} />
+          <AppText className="font-sans-medium text-sm text-blue-700">Edit</AppText>
         </Pressable>
       </View>
     </View>

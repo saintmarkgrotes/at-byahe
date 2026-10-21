@@ -55,6 +55,14 @@ export default function HomeScreen() {
           onNewTripPress={() => setNewTripOpen(true)}
         />
 
+        {/* Calendar */}
+        <View className="mt-4 flex-row gap-3" style={{ paddingHorizontal: SCREEN_PADDING }}>
+          <View className="flex-1">
+            <SectionHeader size="sm" title="Calendar" />
+            <CalendarCard today={today} tripRange={tripRange} />
+          </View>
+        </View>
+
         {[
           { title: 'Current Trips', data: currentTrips },
           { title: 'Upcoming Trips', data: upcomingTrips },
@@ -76,14 +84,6 @@ export default function HomeScreen() {
             <EmptyState title="No trips yet" message="Tap + New Trip to plan your first trip." />
           </View>
         ) : null}
-
-        {/* Calendar */}
-        <View className="mt-4 flex-row gap-3" style={{ paddingHorizontal: SCREEN_PADDING }}>
-          <View className="flex-1">
-            <SectionHeader size="sm" title="Calendar" />
-            <CalendarCard today={today} tripRange={tripRange} />
-          </View>
-        </View>
 
         {/* Packing lists */}
         <View className="mt-8" style={{ paddingHorizontal: SCREEN_PADDING }}>

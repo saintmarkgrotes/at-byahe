@@ -1,12 +1,12 @@
 import { Pressable, View } from 'react-native';
-import { MapPin, Pencil, Trash2 } from 'lucide-react-native';
+import { MapPin } from 'lucide-react-native';
 import colors from '../../constants/colors';
 import { cn } from '../../utils/cn';
-import { AppText, Card } from '../common';
+import { ActionButton, AppText, Card } from '../common';
 
 const ROW_HEIGHT = 'h-10'; // 40px per activity. The timeline line is sized from this.
 
-// One time block: time + location on top, the activity timeline, then Delete / Edit
+// One time block: time + location on top, the activity timeline, then Edit / Delete
 export default function ItineraryCard({ entry, onToggleActivity, onDelete, onEdit }) {
   return (
     <View>
@@ -57,23 +57,8 @@ export default function ItineraryCard({ entry, onToggleActivity, onDelete, onEdi
       </Card>
 
       <View className="mt-3 flex-row justify-end gap-3">
-        <Pressable
-          onPress={onDelete}
-          accessibilityRole="button"
-          className="flex-row items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-4 py-2 active:bg-red-100"
-        >
-          <Trash2 size={16} color="#B91C1C" strokeWidth={1.75} />
-          <AppText className="font-sans-medium text-sm text-red-700">Delete</AppText>
-        </Pressable>
-
-        <Pressable
-          onPress={onEdit}
-          accessibilityRole="button"
-          className="flex-row items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 active:bg-blue-100"
-        >
-          <Pencil size={16} color="#1D4ED8" strokeWidth={1.75} />
-          <AppText className="font-sans-medium text-sm text-blue-700">Edit</AppText>
-        </Pressable>
+        <ActionButton action="edit" onPress={onEdit} accessibilityLabel="Edit plan" />
+        <ActionButton action="delete" onPress={onDelete} accessibilityLabel="Delete plan" />
       </View>
     </View>
   );

@@ -11,16 +11,6 @@ const SIZES = {
 const TONES = {
   brand: { text: 'text-brand-600', icon: colors.brand[600] },
   neutral: { text: 'text-ink', icon: colors.ink },
-  edit: {
-    box: 'border border-blue-200 bg-blue-50 active:bg-blue-100',
-    text: 'text-blue-700',
-    icon: '#1D4ED8',
-  },
-  danger: {
-    box: 'border border-red-200 bg-red-50 active:bg-red-100',
-    text: 'text-red-700',
-    icon: '#B91C1C',
-  },
 };
 
 // Small rounded label with an optional icon. Used for badges, chips and quick actions.
@@ -45,7 +35,6 @@ export default function Pill({
       className={cn(
         'flex-row items-center self-start rounded-full bg-white shadow-md shadow-black/10',
         s.box,
-        t.box,
         className
       )}
     >

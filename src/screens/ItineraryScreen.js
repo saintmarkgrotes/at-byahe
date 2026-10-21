@@ -2,15 +2,13 @@ import { useState } from 'react';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Pencil, Trash2 } from 'lucide-react-native';
-import { AppText, EmptyState, Pill, ProgressBar } from '../components/common';
+import { ActionButton, AppText, EmptyState, Pill, ProgressBar } from '../components/common';
 import TripSelector from '../components/common/TripSelector';
 import {
   DayHeader,
   EditEntryModal,
   ItineraryCard,
   ItineraryHeader,
-  ItineraryMap,
   SegmentTabs,
 } from '../components/itinerary';
 import NewTripModal from '../components/home/NewTripModal';
@@ -18,7 +16,7 @@ import { SCREEN_PADDING, TAB_BAR_HEIGHT } from '../constants/layout';
 import { useTrips } from '../context/TripsContext';
 import { formatFullDate, formatLongRange, getDayLabel } from '../utils/date';
 import { confirmDelete } from '../utils/confirm';
-const TABS = ['Itinerary', 'Map', 'Notes'];
+const TABS = ['Itinerary', 'Notes'];
 const STATUS_LABELS = { planned: 'Planned', ongoing: 'Ongoing', completed: 'Completed' };
 
 export default function ItineraryScreen() {
@@ -83,18 +81,16 @@ function TripItinerary() {
           <AppText variant="muted" className="mt-1">
             {formatLongRange(trip.startDate, trip.endDate)}
           </AppText>
-          <View className="my-4 flex-row flex-wrap gap-3">
+          <View className="my-4 flex-row flex-wrap items-center gap-3">
             <Pill label={STATUS_LABELS[trip.status]} tone="brand" />
-            <Pill
-              label="Edit"
-              icon={Pencil}
-              tone="edit"
+            <ActionButton
+              action="edit"
+              accessibilityLabel="Edit trip"
               onPress={() => setEditingTrip(true)}
             />
-            <Pill
-              label="Delete"
-              icon={Trash2}
-              tone="danger"
+            <ActionButton
+              action="delete"
+              accessibilityLabel="Delete trip"
               onPress={() =>
                 confirmDelete(
                   'Delete this trip?',
@@ -105,9 +101,7 @@ function TripItinerary() {
             />
           </View>
           <SegmentTabs tabs={TABS} active={activeTab} onChange={setActiveTab} />
-          {activeTab === 'Map' ? (
-            <ItineraryMap trip={trip} entries={entries} />
-          ) : activeTab === 'Notes' ? (
+          {activeTab === 'Notes' ? (
             <View className="mt-5">
               <AppText variant="subheading">Trip notes</AppText>
               <TextInput

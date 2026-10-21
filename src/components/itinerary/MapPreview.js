@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppText, EmptyState, Pill } from '../common';
+import { ActionButton, AppText, EmptyState, Pill } from '../common';
 import colors from '../../constants/colors';
 import { createOfflineMapStore, downloadMapArea, findMapPlaces } from '../../maps/offlineMaps';
 import OfflineMapCanvas from './OfflineMapCanvas';
@@ -102,7 +102,8 @@ export default function MapPreview({ query }) {
             <View className="mt-3 flex-row flex-wrap gap-3">
               <Pill label="Update map" onPress={() => download(map.place)} />
               <Pill label="Change area" onPress={findPlaces} />
-              <Pill
+              <ActionButton
+                action="delete"
                 label="Remove download"
                 onPress={() =>
                   run('Removing download…', async () => {

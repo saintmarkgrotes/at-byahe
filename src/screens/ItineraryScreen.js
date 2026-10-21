@@ -86,13 +86,13 @@ function TripItinerary() {
           <View className="my-4 flex-row flex-wrap gap-3">
             <Pill label={STATUS_LABELS[trip.status]} tone="brand" />
             <Pill
-              label="Edit trip"
+              label="Edit"
               icon={Pencil}
               tone="edit"
               onPress={() => setEditingTrip(true)}
             />
             <Pill
-              label="Delete trip"
+              label="Delete"
               icon={Trash2}
               tone="danger"
               onPress={() =>

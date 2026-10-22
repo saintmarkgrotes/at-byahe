@@ -6,4 +6,3 @@ export { default as NewTripModal } from './NewTripModal';
 export { default as PackingListCard } from './PackingListCard';
 export { default as TripCard } from './TripCard';
 export { default as TripCarousel } from './TripCarousel';
-export { default as WeatherCard } from './WeatherCard';

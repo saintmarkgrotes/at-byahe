@@ -85,6 +85,15 @@ export const isValidIsoDate = (iso) => {
 export const toIsoDate = (date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
+/** Resolve a one-based trip day using calendar arithmetic, including month/year boundaries. */
+export const getTripDayDate = (startIso, day) => {
+  if (!isValidIsoDate(startIso) || !Number.isInteger(day) || day < 1) return '';
+  const date = parseDate(startIso);
+  date.setDate(date.getDate() + day - 1);
+  const iso = toIsoDate(date);
+  return isValidIsoDate(iso) ? iso : '';
+};
+
 /** Date -> 'Sep 19, 2026' */
 export const formatDateLabel = (date) => `${formatShortDate(date)}, ${date.getFullYear()}`;
 

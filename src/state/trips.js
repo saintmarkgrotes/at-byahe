@@ -107,7 +107,7 @@ export function changeState(state, action) {
           id: `${id}-first`,
           tripId: id,
           form: {
-            date: form.startDate,
+            date: form.activityDate ?? form.startDate,
             time: form.activityTime,
             location: form.location,
             activities: form.activities,

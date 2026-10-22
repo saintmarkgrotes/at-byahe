@@ -9,7 +9,7 @@ import {
   decodeState,
   sortEntries,
 } from '../src/state/trips.js';
-import { parseTimeLabel, isValidIsoDate, getTripLength } from '../src/utils/date.js';
+import { parseTimeLabel, isValidIsoDate, getTripLength, getTripDayDate } from '../src/utils/date.js';
 import { createTripStorage, STORAGE_KEY } from '../src/state/storage.js';
 const form = {
   destination: 'Baguio',
@@ -21,6 +21,46 @@ const form = {
 const plan = { date: '2026-10-02', time: '9:00 AM', location: 'Park', activities: ['Walk'] };
 const addTrip = (state = emptyState(), id = 'trip1') =>
   changeState(state, { type: 'addTrip', id, form });
+
+test('new trip activities use the selected day and keep it after reloading', () => {
+  for (const activityDate of [form.startDate, '2026-10-02', form.endDate]) {
+    const state = changeState(emptyState(), {
+      type: 'addTrip',
+      id: 'trip1',
+      form: { ...form, activityDate, activities: ['Walk'], activityTime: '9:00 AM' },
+    });
+    const entry = decodeState(encodeState(state)).itinerary[0];
+    assert.equal(entry.date, activityDate);
+    assert.equal(entry.activities[0].title, 'Walk');
+    assert.equal(entry.time, '9:00 AM');
+  }
+});
+
+test('new trip activity dates default to Day One and reject days outside the trip', () => {
+  const initial = emptyState();
+  const withActivities = { ...form, activities: ['Walk'], activityTime: '9:00 AM' };
+  const state = changeState(initial, { type: 'addTrip', id: 'trip1', form: withActivities });
+  assert.equal(state.itinerary[0].date, form.startDate);
+  for (const activityDate of ['2026-09-30', '2026-10-05', '2026-02-31', '']) {
+    assert.throws(() => changeState(initial, {
+      type: 'addTrip', id: 'trip1', form: { ...withActivities, activityDate },
+    }), /within the trip dates/);
+  }
+  assert.throws(() => changeState(initial, {
+    type: 'addTrip', id: 'trip1',
+    form: { ...withActivities, endDate: form.startDate, activityDate: '2026-10-02' },
+  }), /within the trip dates/);
+  assert.deepEqual(initial, emptyState());
+});
+
+test('trip day choices resolve calendar boundaries and reject invalid day numbers', () => {
+  assert.equal(getTripDayDate('2026-12-31', 2), '2027-01-01');
+  assert.equal(getTripDayDate('2028-02-28', 2), '2028-02-29');
+  assert.equal(getTripDayDate('2026-02-28', 2), '2026-03-01');
+  assert.equal(getTripDayDate('2026-03-07', 3), '2026-03-09');
+  for (const day of [0, -1, 1.5, NaN]) assert.equal(getTripDayDate(form.startDate, day), '');
+  assert.equal(getTripDayDate('', 1), '');
+});
 
 test('empty trip accepts a later-day plan, and can replace its last deleted plan', () => {
   let s = addTrip();

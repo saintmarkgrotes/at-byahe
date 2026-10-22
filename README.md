@@ -22,7 +22,9 @@ Trips, plans, packing lists, notes, and your first name are saved with AsyncStor
 
 Select a trip from Home or use the trip switcher in Itinerary/Packing. Add plans to any day within the trip dates. To shorten trip dates, first move or delete any plans outside the new range. Deleting a trip removes its plans, notes, packing list, and reviewed-day progress.
 
-Trip status follows calendar dates. Reviewed days are marked manually, separately from individual activity checkboxes; changing a plan clears its reviewed-day marker. The weather placeholder is hidden until implemented.
+Use **Activity day** in New Trip or Add/Edit Plan to choose Day One, Day Two, or a later day. Each choice shows its calendar date, and all activities in that plan use the selected day. Add another plan to schedule activities on a different day. New trips default to Day One; if you shorten the dates beyond the selected activity day, choose a valid day before saving.
+
+Trip status follows calendar dates. Reviewed days are marked manually, separately from individual activity checkboxes; changing a plan clears its reviewed-day marker.
 
 ## Offline maps
 

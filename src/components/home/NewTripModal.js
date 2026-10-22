@@ -12,8 +12,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X } from 'lucide-react-native';
 import colors from '../../constants/colors';
 import { SCREEN_PADDING } from '../../constants/layout';
-import { toIsoDate, formatTimeLabel, parseDate } from '../../utils/date';
+import { toIsoDate, formatTimeLabel, parseDate, getTripDayDate, getTripLength } from '../../utils/date';
 import { AppText } from '../common';
+import TripDaySelector from '../common/TripDaySelector';
 import ChipInput from './ChipInput';
 import FormField, { inputClassName } from './FormField';
 import PickerField from './PickerField';
@@ -40,7 +41,11 @@ function TripForm({ visible, onClose, onSubmit, trip = null }) {
   const [activities, setActivities] = useState([]);
   const [activityText, setActivityText] = useState('');
   const [activityTime, setActivityTime] = useState(null); // Date | null
+  const [activityDay, setActivityDay] = useState(1);
   const [errors, setErrors] = useState({});
+  const startIso = startDate ? toIsoDate(startDate) : '';
+  const endIso = endDate ? toIsoDate(endDate) : '';
+  const activityDate = getTripDayDate(startIso, activityDay);
 
   const resetForm = () => {
     setDestination('');
@@ -52,6 +57,7 @@ function TripForm({ visible, onClose, onSubmit, trip = null }) {
     setActivities([]);
     setActivityText('');
     setActivityTime(null);
+    setActivityDay(1);
     setErrors({});
   };
 
@@ -74,6 +80,9 @@ function TripForm({ visible, onClose, onSubmit, trip = null }) {
     if (finalActivities.length > 0 && !activityTime) {
       nextErrors.activityTime = 'Pick a start time for your activities.';
     }
+    if (finalActivities.length > 0 && (!activityDate || activityDate > endIso)) {
+      nextErrors.activityDay = 'Choose an activity day within your trip dates.';
+    }
 
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
@@ -86,6 +95,7 @@ function TripForm({ visible, onClose, onSubmit, trip = null }) {
         endDate: toIsoDate(endDate),
         packingItems: finalPacking,
         activities: finalActivities,
+        activityDate,
         activityTime: activityTime ? formatTimeLabel(activityTime) : '',
       });
       resetForm();
@@ -201,7 +211,19 @@ function TripForm({ visible, onClose, onSubmit, trip = null }) {
                   />
                 </FormField>
 
-                <FormField label="Activities" hint="Added to Day One of your itinerary.">
+                <FormField label="Activity day" error={errors.activityDay}>
+                  <TripDaySelector
+                    startDate={startIso}
+                    endDate={endIso}
+                    value={activityDate}
+                    onChange={(date) => {
+                      setActivityDay(getTripLength(startIso, date));
+                      setErrors((current) => ({ ...current, activityDay: undefined }));
+                    }}
+                  />
+                </FormField>
+
+                <FormField label="Activities" hint="Added to the selected day of your itinerary.">
                   <ChipInput
                     items={activities}
                     onChange={setActivities}

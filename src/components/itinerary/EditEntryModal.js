@@ -15,6 +15,7 @@ import { SCREEN_PADDING } from '../../constants/layout';
 import { formatTimeLabel, parseTimeLabel, parseDate, toIsoDate } from '../../utils/date';
 import { withPending } from '../../utils/list';
 import { AppText } from '../common';
+import TripDaySelector from '../common/TripDaySelector';
 import ChipInput from '../home/ChipInput';
 import FormField, { inputClassName } from '../home/FormField';
 import PickerField from '../home/PickerField';
@@ -91,7 +92,7 @@ function EntryForm({ entry, trip, onClose, onSave }) {
           >
             <View>
               <AppText variant="heading">{entry?.id ? 'Edit Plan' : 'Add Plan'}</AppText>
-              <AppText variant="muted">Change the time, place or activities</AppText>
+              <AppText variant="muted">Choose the day, time, place and activities</AppText>
             </View>
             <Pressable
               onPress={onClose}
@@ -109,15 +110,15 @@ function EntryForm({ entry, trip, onClose, onSave }) {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: SCREEN_PADDING, paddingBottom: 8 }}
           >
-            <FormField label="Date" error={errors.date}>
-              <PickerField
-                mode="date"
-                value={date}
-                onChange={setDate}
-                accessibilityLabel="Date"
-                hasError={!!errors.date}
-                minimumDate={trip ? parseDate(trip.startDate) : undefined}
-                maximumDate={trip ? parseDate(trip.endDate) : undefined}
+            <FormField label="Activity day" error={errors.date}>
+              <TripDaySelector
+                startDate={trip.startDate}
+                endDate={trip.endDate}
+                value={date ? toIsoDate(date) : ''}
+                onChange={(iso) => {
+                  setDate(parseDate(iso));
+                  setErrors((current) => ({ ...current, date: undefined }));
+                }}
               />
             </FormField>
             <FormField label="Start time" error={errors.time}>

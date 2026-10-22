@@ -1,27 +1,34 @@
-import { LinearGradient } from 'expo-linear-gradient';
+import { useState } from 'react';
+import { TextInput, View } from 'react-native';
 import colors from '../../constants/colors';
-import { AppText, Pill } from '../common';
+import { Pill } from '../common';
 
-// Mint title band ("Essentials") with an Add pill on the right
-export default function CategoryBand({ title, adding, onAddPress }) {
+// Text field + Add pill for adding a new item to the open category.
+// Submitting adds the item and closes the row, so the empty box doesn't linger.
+export default function AddItemRow({ onAdd, onClose }) {
+  const [title, setTitle] = useState('');
+
+  const submit = () => {
+    const trimmed = title.trim();
+    if (!trimmed) return;
+    onAdd(trimmed);
+    setTitle('');
+    onClose?.();
+  };
+
   return (
-    <LinearGradient
-      colors={[colors.mint, 'rgba(200,245,223,0)']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={{
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 8,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}
-    >
-      <AppText variant="display" className="shrink text-brand-600">
-        {title}
-      </AppText>
-      <Pill label={adding ? 'Close' : 'Add'} tone="brand" size="sm" onPress={onAddPress} />
-    </LinearGradient>
+    <View className="mt-3 flex-row items-center gap-2">
+      <TextInput
+        value={title}
+        onChangeText={setTitle}
+        placeholder="Item name"
+        placeholderTextColor={colors.inactive}
+        onSubmitEditing={submit}
+        returnKeyType="done"
+        autoFocus
+        className="h-[52px] flex-1 rounded-2xl border border-gray-200 bg-white px-4 font-sans text-base text-ink"
+      />
+      <Pill label="Add" tone="brand" size="sm" onPress={submit} />
+    </View>
   );
 }

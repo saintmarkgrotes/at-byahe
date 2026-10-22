@@ -52,8 +52,7 @@ export default function PackingItemRow({
           <TextInput
             defaultValue={item.title}
             onChangeText={onRename} // empty names are ignored, so the old name stays
-            placeholder="Item name"
-            placeholderTextColor={colors.inactive}
+            accessibilityLabel="Item name"
             className={cn('flex-1 border-b border-brand-200 py-1 font-sans text-base', nameStyle)}
           />
         ) : (

@@ -4,7 +4,7 @@ export default function PickerField({
   mode,
   value,
   onChange,
-  placeholder,
+  accessibilityLabel,
   hasError,
   minimumDate,
   maximumDate,
@@ -17,7 +17,7 @@ export default function PickerField({
   return createElement('input', {
     type: mode,
     value: formatted,
-    'aria-label': placeholder,
+    'aria-label': accessibilityLabel,
     'aria-invalid': !!hasError,
     min: mode === 'date' && minimumDate ? toIsoDate(minimumDate) : undefined,
     max: mode === 'date' && maximumDate ? toIsoDate(maximumDate) : undefined,

@@ -6,7 +6,7 @@ import { inputClassName } from './FormField';
 
 // Type something, press Add (or the keyboard's return key) and it becomes a removable chip.
 // The parent owns both the list (`items`) and the box text (`text`).
-export default function ChipInput({ items, onChange, text, onChangeText, placeholder }) {
+export default function ChipInput({ items, onChange, text, onChangeText, accessibilityLabel }) {
   const addItem = () => {
     const value = text.trim();
     if (!value) return;
@@ -27,8 +27,7 @@ export default function ChipInput({ items, onChange, text, onChangeText, placeho
           onSubmitEditing={addItem}
           submitBehavior="submit"
           returnKeyType="done"
-          placeholder={placeholder}
-          placeholderTextColor={colors.inactive}
+          accessibilityLabel={accessibilityLabel}
           className={`flex-1 ${inputClassName(false)}`}
         />
         <Pressable

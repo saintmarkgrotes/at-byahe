@@ -18,7 +18,7 @@ export default function PickerField({
   mode,
   value,
   onChange,
-  placeholder,
+  accessibilityLabel,
   hasError,
   minimumDate,
   maximumDate,
@@ -66,10 +66,12 @@ export default function PickerField({
       <Pressable
         onPress={openPicker}
         accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityValue={{ text: value ? format(value) : 'Not selected' }}
         className={cn(inputClassName(hasError), 'flex-row items-center justify-between')}
       >
-        <AppText className={cn('font-sans text-base', value ? 'text-ink' : 'text-inactive')}>
-          {value ? format(value) : placeholder}
+        <AppText className="font-sans text-base text-ink">
+          {value ? format(value) : ''}
         </AppText>
         <Icon size={18} color={colors.brand[600]} strokeWidth={1.75} />
       </Pressable>

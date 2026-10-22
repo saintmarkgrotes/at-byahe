@@ -142,7 +142,6 @@ export default function MapPreview({ query }) {
             editable={!busy}
             onSubmitEditing={findPlaces}
             returnKeyType="search"
-            placeholder="Town, landmark, or full address"
             className="rounded-2xl border border-brand-200 bg-brand-50 px-4 py-3 font-sans text-base text-ink"
           />
           <AppText variant="caption">

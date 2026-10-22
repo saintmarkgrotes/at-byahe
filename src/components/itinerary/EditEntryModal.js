@@ -114,7 +114,7 @@ function EntryForm({ entry, trip, onClose, onSave }) {
                 mode="date"
                 value={date}
                 onChange={setDate}
-                placeholder="Select date"
+                accessibilityLabel="Date"
                 hasError={!!errors.date}
                 minimumDate={trip ? parseDate(trip.startDate) : undefined}
                 maximumDate={trip ? parseDate(trip.endDate) : undefined}
@@ -125,7 +125,7 @@ function EntryForm({ entry, trip, onClose, onSave }) {
                 mode="time"
                 value={time}
                 onChange={setTime}
-                placeholder="Select time"
+                accessibilityLabel="Start time"
                 hasError={!!errors.time}
               />
             </FormField>
@@ -134,8 +134,7 @@ function EntryForm({ entry, trip, onClose, onSave }) {
               <TextInput
                 value={location}
                 onChangeText={setLocation}
-                placeholder="Address or area"
-                placeholderTextColor={colors.inactive}
+                accessibilityLabel="Location"
                 className={inputClassName(false)}
               />
             </FormField>
@@ -146,7 +145,7 @@ function EntryForm({ entry, trip, onClose, onSave }) {
                 onChange={setActivities}
                 text={activityText}
                 onChangeText={setActivityText}
-                placeholder="Add an activity"
+                accessibilityLabel="Activities"
               />
             </FormField>
             {errors.submit ? (

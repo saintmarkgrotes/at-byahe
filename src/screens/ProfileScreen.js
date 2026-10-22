@@ -28,7 +28,6 @@ export default function ProfileScreen() {
           onChangeText={updateProfile}
           maxLength={80}
           autoCapitalize="words"
-          placeholder="Your name"
           className="mt-3 rounded-2xl border border-gray-200 p-4 font-sans text-base text-ink"
         />
         <AppText variant="caption" className="mt-2">

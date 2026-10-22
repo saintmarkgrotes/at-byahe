@@ -144,8 +144,7 @@ function TripForm({ visible, onClose, onSubmit, trip = null }) {
               <TextInput
                 value={destination}
                 onChangeText={setDestination}
-                placeholder="Where are you going?"
-                placeholderTextColor={colors.inactive}
+                accessibilityLabel="Destination"
                 className={inputClassName(!!errors.destination)}
               />
             </FormField>
@@ -158,8 +157,7 @@ function TripForm({ visible, onClose, onSubmit, trip = null }) {
                 <TextInput
                   value={location}
                   onChangeText={setLocation}
-                  placeholder="Address or area"
-                  placeholderTextColor={colors.inactive}
+                  accessibilityLabel="Location (optional)"
                   className={inputClassName(false)}
                 />
               </FormField>
@@ -175,7 +173,7 @@ function TripForm({ visible, onClose, onSubmit, trip = null }) {
                     // Keep the end date valid if it was set before an even later start date
                     if (date && endDate && toIsoDate(endDate) < toIsoDate(date)) setEndDate(null);
                   }}
-                  placeholder="Select date"
+                  accessibilityLabel="Start date"
                   hasError={!!errors.startDate}
                 />
               </FormField>
@@ -184,7 +182,7 @@ function TripForm({ visible, onClose, onSubmit, trip = null }) {
                   mode="date"
                   value={endDate}
                   onChange={setEndDate}
-                  placeholder="Select date"
+                  accessibilityLabel="End date"
                   hasError={!!errors.endDate}
                   minimumDate={startDate ?? undefined}
                 />
@@ -199,7 +197,7 @@ function TripForm({ visible, onClose, onSubmit, trip = null }) {
                     onChange={setPackingItems}
                     text={packingText}
                     onChangeText={setPackingText}
-                    placeholder="Add something to bring"
+                    accessibilityLabel="Things to bring"
                   />
                 </FormField>
 
@@ -209,7 +207,7 @@ function TripForm({ visible, onClose, onSubmit, trip = null }) {
                     onChange={setActivities}
                     text={activityText}
                     onChangeText={setActivityText}
-                    placeholder="Add an activity"
+                    accessibilityLabel="Activities"
                   />
                 </FormField>
 
@@ -222,7 +220,7 @@ function TripForm({ visible, onClose, onSubmit, trip = null }) {
                     mode="time"
                     value={activityTime}
                     onChange={setActivityTime}
-                    placeholder="Select time"
+                    accessibilityLabel="Start time"
                     hasError={!!errors.activityTime}
                   />
                 </FormField>

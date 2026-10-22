@@ -110,7 +110,6 @@ function TripItinerary() {
                 textAlignVertical="top"
                 value={trip.notes}
                 onChangeText={(notes) => updateNotes(trip.id, notes)}
-                placeholder="Addresses, reminders, and ideas for this trip..."
                 className="mt-3 min-h-[220px] rounded-2xl border border-gray-200 p-4 font-sans text-base text-ink"
               />
               <AppText variant="caption" className="mt-2">

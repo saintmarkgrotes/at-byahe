@@ -124,8 +124,6 @@ export default function NameScreen({ onContinue }) {
                 setName(value);
                 setError('');
               }}
-              placeholder="Enter Name"
-              placeholderTextColor="#A2A6A3"
               autoCapitalize="words"
               autoComplete="given-name"
               textContentType="givenName"

@@ -14,7 +14,7 @@ const VARIANTS = {
 
 export default function AppText({ variant = 'body', className, children, ...props }) {
   const classes = cn(VARIANTS[variant], className);
-  const fontClasses = isLoaded('PlusJakartaSans_400Regular')
+  const fontClasses = isLoaded('Nunito_400Regular')
     ? classes
     : classes.replace(/\bfont-sans(?:-[a-z]+)?\b/g, '');
   return (

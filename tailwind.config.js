@@ -10,11 +10,11 @@ module.exports = {
       colors,
       // One entry per weight, because React Native loads each weight as its own font file
       fontFamily: {
-        sans: ['PlusJakartaSans_400Regular'],
-        'sans-medium': ['PlusJakartaSans_500Medium'],
-        'sans-semibold': ['PlusJakartaSans_600SemiBold'],
-        'sans-bold': ['PlusJakartaSans_700Bold'],
-        'sans-extrabold': ['PlusJakartaSans_800ExtraBold'],
+        sans: ['Nunito_400Regular'],
+        'sans-medium': ['Nunito_500Medium'],
+        'sans-semibold': ['Nunito_600SemiBold'],
+        'sans-bold': ['Nunito_700Bold'],
+        'sans-extrabold': ['Nunito_800ExtraBold'],
       },
     },
   },

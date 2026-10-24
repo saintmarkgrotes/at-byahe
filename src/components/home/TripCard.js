@@ -4,20 +4,24 @@ import { List, Plane, SquareChevronRight } from 'lucide-react-native';
 import { formatRange, getTripLength } from '../../utils/date';
 import { AppText, Pill } from '../common';
 
+const TRIP_CARD_HEIGHT = 208;
+
 const STATUS_LABELS = {
   planned: 'Planned',
   ongoing: 'Ongoing',
   completed: 'Completed',
 };
 
-export default function TripCard({ trip, width, onPress }) {
+export default function TripCard({ trip, width, onPress, compact = false }) {
   const days = getTripLength(trip.startDate, trip.endDate);
 
   return (
     <Pressable
       onPress={onPress}
-      style={{ width }}
-      className="h-52 overflow-hidden rounded-[28px] bg-brand-500 shadow-lg shadow-brand-600/30 active:opacity-95"
+      style={{ width, height: TRIP_CARD_HEIGHT }}
+      accessibilityRole="button"
+      accessibilityLabel={`${trip.destination}, ${formatRange(trip.startDate, trip.endDate)}. View trip plans`}
+      className="overflow-hidden rounded-[28px] bg-brand-500 shadow-lg shadow-brand-600/30 active:opacity-95"
     >
       {trip.image ? (
         <Image source={trip.image} resizeMode="cover" style={StyleSheet.absoluteFill} />
@@ -35,14 +39,18 @@ export default function TripCard({ trip, width, onPress }) {
       </View>
 
       <View className="flex-1 justify-end p-5">
-        <AppText variant="display" className="text-[34px] text-white">
+        <AppText
+          variant="display"
+          numberOfLines={2}
+          className={compact ? 'text-2xl leading-7 text-white' : 'text-[34px] text-white'}
+        >
           {trip.destination}
         </AppText>
         <AppText className="mt-1 font-sans-medium text-base text-white/95">
           {formatRange(trip.startDate, trip.endDate)}
         </AppText>
 
-        <View className="mt-3 flex-row items-center gap-2">
+        <View className="mt-3 flex-row flex-wrap items-center gap-2">
           <Pill icon={Plane} label={`${days} days`} />
           <Pill icon={List} label={`${trip.activitiesCount} activities`} />
           <SquareChevronRight size={22} color="#FFFFFF" strokeWidth={1.75} />

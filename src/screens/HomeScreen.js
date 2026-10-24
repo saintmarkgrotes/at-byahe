@@ -65,17 +65,21 @@ export default function HomeScreen() {
 
         {[
           { title: 'Current Trips', data: currentTrips },
-          { title: 'Upcoming Trips', data: upcomingTrips },
+          { title: 'Upcoming Trips', data: upcomingTrips, previewAdjacent: true },
           { title: 'Past Trips', data: [...pastTrips].reverse() },
-        ].map(({ title, data }) =>
+        ].map(({ title, data, previewAdjacent }) =>
           data.length > 0 ? (
             <View key={title} className="mt-8">
               <SectionHeader
                 title={title}
-                subtitle="Tap a trip to view its plans"
+                subtitle={
+                  previewAdjacent && data.length > 1
+                    ? 'Swipe through your trips'
+                    : 'Tap a trip to view its plans'
+                }
                 className="px-6"
               />
-              <TripCarousel trips={data} onTripPress={handleTripPress} />
+              <TripCarousel trips={data} previewAdjacent={previewAdjacent} onTripPress={handleTripPress} />
             </View>
           ) : null
         )}

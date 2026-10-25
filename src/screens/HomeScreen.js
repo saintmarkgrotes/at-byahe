@@ -74,8 +74,8 @@ export default function HomeScreen() {
                 title={title}
                 subtitle={
                   previewAdjacent && data.length > 1
-                    ? 'Swipe through your trips'
-                    : 'Tap a trip to view its plans'
+                    ? 'Swipe through your trips.'
+                    : 'Tap a trip to view its plans.'
                 }
                 className="px-6"
               />

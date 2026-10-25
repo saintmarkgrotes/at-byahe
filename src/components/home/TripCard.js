@@ -21,7 +21,7 @@ export default function TripCard({ trip, width, onPress, compact = false }) {
       style={{ width, height: TRIP_CARD_HEIGHT }}
       accessibilityRole="button"
       accessibilityLabel={`${trip.destination}, ${formatRange(trip.startDate, trip.endDate)}. View trip plans`}
-      className="overflow-hidden rounded-[28px] bg-brand-500 shadow-lg shadow-brand-600/30 active:opacity-95"
+      className="overflow-hidden rounded-2xl bg-brand-500 shadow-lg shadow-brand-600/30 active:opacity-95"
     >
       {trip.image ? (
         <Image source={trip.image} resizeMode="cover" style={StyleSheet.absoluteFill} />

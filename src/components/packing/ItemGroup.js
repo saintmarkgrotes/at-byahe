@@ -27,11 +27,13 @@ export default function ItemGroup({
         <View className="flex-row gap-2">
           <ActionButton
             action="edit"
+            size="sm"
             active={mode === 'edit'}
             onPress={() => onToggleMode('edit')}
           />
           <ActionButton
             action="delete"
+            size="sm"
             active={mode === 'delete'}
             onPress={() => onToggleMode('delete')}
           />

@@ -82,14 +82,20 @@ function TripItinerary() {
             {formatLongRange(trip.startDate, trip.endDate)}
           </AppText>
           <View className="my-4 flex-row flex-wrap items-center gap-3">
-            <Pill label={STATUS_LABELS[trip.status]} tone="brand" />
+            <Pill
+              label={STATUS_LABELS[trip.status]}
+              tone="brand"
+              className="h-7 justify-center py-0"
+            />
             <ActionButton
               action="edit"
+              size="sm"
               accessibilityLabel="Edit trip"
               onPress={() => setEditingTrip(true)}
             />
             <ActionButton
               action="delete"
+              size="sm"
               accessibilityLabel="Delete trip"
               onPress={() =>
                 confirmDelete(

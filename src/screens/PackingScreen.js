@@ -114,17 +114,6 @@ export default function PackingScreen() {
                       ) : null}
 
                       <ItemGroup
-                        title="Items Already Packed"
-                        packed
-                        items={packed}
-                        mode={modeOf(`${trip.id}:${category}:packed`)}
-                        onToggleMode={(mode) => toggleMode(`${trip.id}:${category}:packed`, mode)}
-                        onToggleItem={(item) => togglePacked(list.id, item.id)}
-                        onDeleteItem={(item) => confirmDeleteItem(trip, list, item)}
-                        onRenameItem={(item, title) => renamePackingItem(list.id, item.id, title)}
-                      />
-
-                      <ItemGroup
                         title="Items Not Yet Packed"
                         packed={false}
                         items={notPacked}
@@ -132,6 +121,17 @@ export default function PackingScreen() {
                         onToggleMode={(mode) =>
                           toggleMode(`${trip.id}:${category}:notPacked`, mode)
                         }
+                        onToggleItem={(item) => togglePacked(list.id, item.id)}
+                        onDeleteItem={(item) => confirmDeleteItem(trip, list, item)}
+                        onRenameItem={(item, title) => renamePackingItem(list.id, item.id, title)}
+                      />
+
+                      <ItemGroup
+                        title="Items Already Packed"
+                        packed
+                        items={packed}
+                        mode={modeOf(`${trip.id}:${category}:packed`)}
+                        onToggleMode={(mode) => toggleMode(`${trip.id}:${category}:packed`, mode)}
                         onToggleItem={(item) => togglePacked(list.id, item.id)}
                         onDeleteItem={(item) => confirmDeleteItem(trip, list, item)}
                         onRenameItem={(item, title) => renamePackingItem(list.id, item.id, title)}
